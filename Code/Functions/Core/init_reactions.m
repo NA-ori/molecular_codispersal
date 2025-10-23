@@ -1,0 +1,174 @@
+function [reactions, ring_list, base_species] = init_reactions(p, options)
+    %rings, subcycles_per_ring, prop_forms, formation_type, reac_rate, must_adsorb, fac_rings)
+
+% Better network generation code.
+
+    arguments (Input)
+        p;
+        options.rings {mustBeInteger} = 2;
+        options.subcycles_per_ring = [3,3];
+        options.prop_forms = [0,1];
+        options.formation_type = ["cheater", "cheater"];
+        options.reac_rate = [0.01,0.01];
+        options.must_adsorb = [1,1];
+        options.fac_rings = [0,0];
+    end
+
+    reactions = {};
+    ring_list = cell(1,options.rings);
+    base_species = [];
+
+    for current_ring = 1:options.rings
+        member_species_list = [];
+        if options.must_adsorb(current_ring) == 1
+            adsorb_tag = "_ad";
+        else
+            adsorb_tag = "_diff";
+        end
+
+        for current_sub = 1:options.subcycles_per_ring(current_ring)
+            curren_reac_rate = options.reac_rate(current_ring);
+
+            % generate a member species and intermediates:
+            member_species = "sp_r" + string(current_ring) + "_" + string(current_sub);
+            member_species_intermediate = "sp_r" + string(current_ring) + "_" + string(current_sub) + "_i";
+            member_species_waste = "sp_r" + string(current_ring) + "_" + string(current_sub) + "_w";
+
+            % link subcycles through waste:
+            mutualist_waste = "";
+            if current_sub == options.subcycles_per_ring
+                mutualist_waste = "sp_r" + string(current_ring) + "_" + string(1) + "w";
+            else
+                mutualist_waste = "sp_r" + string(current_ring) + "_" + string(current_sub + 1) + "w";
+            end
+
+            member_species_list = [member_species_list, member_species];
+            base_species = [base_species, member_species, member_species_intermediate, member_species_waste];
+            ring_list{1, current_ring} = [ring_list{1, current_ring}, member_species, member_species_intermediate, member_species_waste];
+
+            % generate the list of reactions for the subcycle
+            initial_rxn = {curren_reac_rate, {append(member_species, adsorb_tag), "F", "site"}, {1, 1, 1}, {append(member_species_intermediate, adsorb_tag), append(member_species_waste, adsorb_tag)}, {1, 1}, "autocat"};
+            reverse_initial_rxn = {curren_reac_rate, {append(member_species_intermediate, adsorb_tag), append(member_species_waste, adsorb_tag)}, {1, 1}, {append(member_species, adsorb_tag), "F", "site"}, {1, 1, 1}, "autocat"};
+            secondary_rxn = {curren_reac_rate, {append(member_species_intermediate, adsorb_tag), append(mutualist_waste, adsorb_tag)}, {1, 1}, {append(member_species, adsorb_tag)}, {2}, "autocat"};
+            reverse_secondary_rxn = {curren_reac_rate, {append(member_species, adsorb_tag)}, {2}, {append(member_species_intermediate, adsorb_tag), append(mutualist_waste, adsorb_tag)}, {1, 1}, "autocat"};
+            if options.fac_rings(current_ring) == 1
+                generic_secondary_rxn = {curren_reac_rate/p.independence_disadvantage, {append(member_species_intermediate, adsorb_tag), "F"}, {1, 1}, {append(member_species, adsorb_tag)}, {2}, "autocat"};
+                reverse_generic_secondary_rxn = {curren_reac_rate/p.independence_disadvantage, {append(member_species, adsorb_tag)}, {2}, {append(member_species_intermediate, adsorb_tag), "F"}, {1, 1}, "autocat"};
+            end
+
+            % add to reaction list
+            reactions{end + 1,1} = initial_rxn;
+            reactions{end + 1,1} = reverse_initial_rxn;
+            reactions{end + 1,1} = secondary_rxn;
+            reactions{end + 1,1} = reverse_secondary_rxn;
+            if options.fac_rings(current_ring) == 1
+                reactions{end + 1,1} = generic_secondary_rxn;
+                reactions{end + 1,1} = reverse_generic_secondary_rxn;
+            end
+        end
+
+
+        if options.prop_forms(current_ring) == 1
+            % Add propagule formation here if necessary
+            % Two methods for doing this
+
+            % 'cheater' makes a higher-order reaction if necessary and
+            % then the propensity calculating code will base the propensity
+            % on the counts of only two randomly chosen reactants
+            % This is an egregious violation of the gillespie algorithm but it
+            % should perhaps make prop formation rates comparable for the
+            % purposes of isolating the role of propagules
+
+            % 'split' splits everything into max second-order reactions.
+            % Much more sensible at the cost of being a pain.
+
+            reactants_list = {};
+            for i = 1:length(member_species_list)
+                reactants_list{end+1} = append(member_species_list(i), adsorb_tag);
+            end
+
+            free_reactants_list = {};
+            for i = 1:length(member_species_list)
+                free_reactants_list{end+1} = append(member_species_list(i), "_diff");
+            end            
+
+            reac_stoich = num2cell(ones(1, length(member_species_list)));
+
+            if options.formation_type(current_ring) == "cheater"
+                prop_rxn = {p.prop_form_rate, reactants_list, reac_stoich, {("prop_" + string(current_ring)), "site"}, {1, length(member_species_list)}, "prop_form"};
+                % Remember to add break reaction here too
+                reactions{end + 1,1} = prop_rxn;
+
+            elseif options.formation_type(current_ring) == "split"
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                % Cheating for now. Need to add auto-generation!%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                if options.subcycles_per_ring(current_ring) == 2
+                    reactions{end + 1,1} = {p.prop_formation_rate, reactants_list, reac_stoich, {("prop_" + string(current_ring)), "site"}, {1, 2}, "prop_form"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {free_reactants_list}, reac_stoich, "prop_break"};
+
+                elseif options.subcycles_per_ring(current_ring) == 3
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_ad", "spr1_2_ad"}, {1,1}, {"spr1_1_2_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_2_prop"}, {1}, {"spr1_1_ad", "spr1_2_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_ad", "spr1_3_ad"}, {1,1}, {"spr1_1_3_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_3_prop"}, {1}, {"spr1_1_ad", "spr1_3_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_ad", "spr1_3_ad"}, {1,1}, {"spr1_2_3_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_3_prop"}, {1}, {"spr1_2_ad", "spr1_3_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_2_prop", "spr1_3_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_3_prop", "spr1_2_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_2_3_prop", "spr1_1_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {"spr1_1_diff", "spr1_2_diff", "spr1_3_diff"}, {1,1,1}, "prop_break"};
+
+                elseif options.subcycles_per_ring(current_ring) == 4
+
+                end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                % End Cheating %
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            end
+
+        end
+
+    end
+
+    % Now add adsorption/desorption reactions
+    for spec = 1:length(base_species)
+        reactions{end + 1,1} = {p.adsorb_rate, {(base_species(spec) + "_diff"), "site"}, {1,1}, {(base_species(spec) + "_ad")}, {1}, "adsorb"};
+        reactions{end + 1,1} = {p.adsorb_rate, {(base_species(spec) + "_ad")}, {1}, {(base_species(spec) + "_diff"), "site"}, {1,1}, "desorb"};
+    end
+
+
+    % Temporary printing to test function functionality :3
+    for current_row = 1:size(reactions, 1)
+        fprintf("{" + string(reactions{current_row}{1}) + " ")
+        fprintf("{ ")
+        for column = 1:size(reactions{current_row}{2}, 2)
+            fprintf(string(reactions{current_row}{2}{column}) + " ")
+        end
+        fprintf("} ")
+        fprintf("{ ")
+        for column = 1:size(reactions{current_row}{3}, 2)
+            fprintf(string(reactions{current_row}{3}{column}) + " ")
+        end
+        fprintf("} ")
+        fprintf("{ ")
+        for column = 1:size(reactions{current_row}{4}, 2)
+            fprintf(string(reactions{current_row}{4}{column}) + " ")
+        end
+        fprintf("} ")
+        fprintf("{ ")
+        for column = 1:size(reactions{current_row}{5}, 2)
+            fprintf(string(reactions{current_row}{5}{column}) + " ")
+        end
+        fprintf("} ")
+        fprintf("{ ")
+        for column = 1:size(reactions{current_row}{6}, 2)
+            fprintf(reactions{current_row}{6}{column} + "}")
+        end
+        fprintf("} ")
+        fprintf("\n")
+    end
+
+end
