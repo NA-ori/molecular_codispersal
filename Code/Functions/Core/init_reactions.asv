@@ -130,10 +130,8 @@ function [reactions, ring_list, base_species] = init_reactions(p, options)
                     reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_3_ad", "spr1_4_ad"}, {1,1}, {"spr1_3_4_prop"}, {1}, "init_prop"};
                     reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_3_4_prop"}, {1}, {"spr1_3_ad", "spr1_4_ad"}, {1,1}, "init_prop"};
 
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_2_prop", "spr1_3_4_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_3_prop", "spr1_2_4_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_4_prop", "spr1_2_3_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {"spr1_1_diff", "spr1_2_diff", "spr1_3_diff", "spr1_4_diff"}, {1,1,1,1}, "prop_break"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_3_prop", "spr1_3_ad"}, {1,1}, {"spr1_2_3_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_3_prop"}, {1}, {"spr1_2_ad", "spr1_3_ad"}, {1,1}, "init_prop"};
 
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
