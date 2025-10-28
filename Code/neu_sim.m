@@ -1,4 +1,4 @@
-function [] = neu_sim(options)
+function [reactions, ring_list, base_species, species_counts, member_species_record, p] = neu_sim(options)
 
 % Smarter version of the original CHTC sim.
 % Reduces hard-coding and therefore hopefully mistakes.
@@ -10,22 +10,23 @@ function [] = neu_sim(options)
 
     arguments (Input)
         % Inputs are modified into lists to allow more flexibility
-        options.dim = 0;
+        options.dim = 10;
         options.t_max = 10000;
         options.default_concentration = 0;
-        options.food_concentration = [500];
+        options.food_concentration = 500;
         options.seed_concentration = [25,25];
-        options.site_concentration = [500];
+        options.site_concentration = 500;
         options.independence_disadvantage = [Inf];
-        options.flow_rate = 0.1;
+        options.flow_rate = 1;
         options.in_rate = 0.1;
-        options.out_rate = 0.1;
-        options.adsorp_rate = 0.01;
+        options.out_rate = 1;
+        options.adsorb_rate = 0.01;
         options.fierce_reaction_rate = 0.01;
-        options.prop_form_rate = 0.01/5;
-        options.food_set = [];
-        options.site_set = [];
-        options.seed_set = [];
+        options.prop_formation_rate = 0.01/5;
+        options.prop_funnel_rate = 0.1;
+        options.disperse_frequency = 50; % How frequently (number of steps) between which dispersal will happen
+        options.seed_locations = [4,6];
+        options.seed_state = ["_diff", "_diff"];
 
     end
     
@@ -34,5 +35,9 @@ function [] = neu_sim(options)
     % Simply convert the options into the famed parameter struct p
 
     p = options;
+
+    [reactions, ring_list, member_species_record, base_species] = init_reactions(p);
+
+    [species_counts] = init_world(p, reactions, ring_list, base_species, member_species_record);
 
 end

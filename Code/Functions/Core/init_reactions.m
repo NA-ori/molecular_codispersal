@@ -1,4 +1,4 @@
-function [reactions, ring_list, base_species] = init_reactions(p, options)
+function [reactions, ring_list, member_species_record, base_species] = init_reactions(p, options)
     %rings, subcycles_per_ring, prop_forms, formation_type, reac_rate, must_adsorb, fac_rings)
 
 % Better network generation code.
@@ -8,7 +8,7 @@ function [reactions, ring_list, base_species] = init_reactions(p, options)
         options.rings {mustBeInteger} = 2;
         options.subcycles_per_ring = [3,3];
         options.prop_forms = [0,1];
-        options.formation_type = ["cheater", "cheater"];
+        options.formation_type = ["split", "split"];
         options.reac_rate = [0.01,0.01];
         options.must_adsorb = [1,1];
         options.fac_rings = [0,0];
@@ -17,6 +17,8 @@ function [reactions, ring_list, base_species] = init_reactions(p, options)
     reactions = {};
     ring_list = cell(1,options.rings);
     base_species = [];
+    ring_species = []; % will contain central ring species ONLY
+    member_species_record = cell(1,options.rings);
 
     for current_ring = 1:options.rings
         member_species_list = [];
@@ -43,8 +45,10 @@ function [reactions, ring_list, base_species] = init_reactions(p, options)
             end
 
             member_species_list = [member_species_list, member_species];
-            base_species = [base_species, member_species, member_species_intermediate, member_species_waste];
+
+            ring_species = [ring_species, member_species, member_species_intermediate, member_species_waste];
             ring_list{1, current_ring} = [ring_list{1, current_ring}, member_species, member_species_intermediate, member_species_waste];
+            member_species_record{1, current_ring} = member_species_list;
 
             % generate the list of reactions for the subcycle
             reactions{end + 1,1} = {curren_reac_rate, {append(member_species, adsorb_tag), "F", "site"}, {1, 1, 1}, {append(member_species_intermediate, adsorb_tag), append(member_species_waste, adsorb_tag)}, {1, 1}, "autocat"};
@@ -147,9 +151,20 @@ function [reactions, ring_list, base_species] = init_reactions(p, options)
     end
 
     % Now add adsorption/desorption reactions
-    for spec = 1:length(base_species)
-        reactions{end + 1,1} = {p.adsorb_rate, {(base_species(spec) + "_diff"), "site"}, {1,1}, {(base_species(spec) + "_ad")}, {1}, "adsorb"};
-        reactions{end + 1,1} = {p.adsorb_rate, {(base_species(spec) + "_ad")}, {1}, {(base_species(spec) + "_diff"), "site"}, {1,1}, "desorb"};
+    for spec = 1:length(ring_species)
+        reactions{end + 1,1} = {p.adsorb_rate, {(ring_species(spec) + "_diff"), "site"}, {1,1}, {(ring_species(spec) + "_ad")}, {1}, "adsorb"};
+        reactions{end + 1,1} = {p.adsorb_rate, {(ring_species(spec) + "_ad")}, {1}, {(ring_species(spec) + "_diff"), "site"}, {1,1}, "desorb"};
     end
+
+    % Retrieve a list of all species in the network
+    for x = 1:size(reactions, 1)  % get a list of all the species from the basic reactions
+        for y = 1:size(reactions{x}{2}, 2)
+            base_species = [base_species, reactions{x}{2}{y}];
+        end
+        for z = 1:size(reactions{x}{4}, 2)
+            base_species = [base_species, reactions{x}{4}{z}];
+        end
+    end
+    base_species = unique(base_species);    % remove all non-unique species
 
 end
