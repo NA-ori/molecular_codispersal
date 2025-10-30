@@ -1,4 +1,4 @@
-function [reactions, ring_list, base_species, species_counts, member_species_record, p] = neu_sim(options)
+function [reactions, ring_list, base_species, species_counts, member_species_record, current_reaction_propensities, p] = neu_sim(options)
 
 % Smarter version of the original CHTC sim.
 % Reduces hard-coding and therefore hopefully mistakes.
@@ -27,6 +27,8 @@ function [reactions, ring_list, base_species, species_counts, member_species_rec
         options.disperse_frequency = 50; % How frequently (number of steps) between which dispersal will happen
         options.seed_locations = [4,6];
         options.seed_state = ["_diff", "_diff"];
+        options.disturb_freq = Inf;
+        options.sample_number = 1000;
 
     end
     
@@ -36,8 +38,11 @@ function [reactions, ring_list, base_species, species_counts, member_species_rec
 
     p = options;
 
+    fprintf("Initializing reactions >w<\n");
     [reactions, ring_list, member_species_record, base_species] = init_reactions(p);
+    fprintf("Initializing world >w<\n");
+    [species_counts, coordinate_list] = init_world(p, reactions, ring_list, base_species, member_species_record);
 
-    [species_counts] = init_world(p, reactions, ring_list, base_species, member_species_record);
+    [species_counts, time, current_reaction_propensities, current_chemical_counts] = simulate(p, species_counts, reactions, coordinate_list);
 
 end

@@ -156,6 +156,9 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
         reactions{end + 1,1} = {p.adsorb_rate, {(ring_species(spec) + "_ad")}, {1}, {(ring_species(spec) + "_diff"), "site"}, {1,1}, "desorb"};
     end
 
+    % Add inflow reaction
+    reactions{end + 1,1} = {p.in_rate, {"F"}, {0}, {"F"}, {1}, "inflow"};
+
     % Retrieve a list of all species in the network
     for x = 1:size(reactions, 1)  % get a list of all the species from the basic reactions
         for y = 1:size(reactions{x}{2}, 2)

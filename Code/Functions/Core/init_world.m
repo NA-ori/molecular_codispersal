@@ -1,4 +1,4 @@
-function [species_counts] = init_world(p, reactions, ring_list, base_species, member_species_record)
+function [species_counts, coordinate_list] = init_world(p, reactions, ring_list, base_species, member_species_record)
     % Initialize the dimensions of the world and all the data structures
     % that will hold information
 
