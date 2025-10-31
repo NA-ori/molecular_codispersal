@@ -1,4 +1,4 @@
-function [species_counts, time, current_reaction_propensities, current_chemical_counts] = simulate(p, species_counts, reactions, coordinate_list)
+function [species_counts, time, current_reaction_propensities, concentration_tracker] = simulate(p, species_counts, reactions, coordinate_list)
 
     arguments (Input)
         p;
@@ -22,8 +22,8 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
     time = [];
 
     % Set up the update key
-    reaction_update_key = cell(1,size(reactions,2));
-    reaction_updates_calculated = zeros(1, size(reactions,2));
+    reaction_update_key = cell(1,size(reactions,1));
+    reaction_updates_calculated = zeros(1, size(reactions,1));
 
     % Initialize propensity tracker (and initial reaction propensities)
     current_chemical_counts = species_counts;
@@ -39,6 +39,8 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
         % But maybe see what happens if I don't first?
     end
 
+    concentration_tracker = current_chemical_counts;
+
 
     %%%%%%%%%%%%%%%%%%%%%%%%%
     % THE ACTUAL SIMULATION %
@@ -47,15 +49,14 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
     while t <= p.t_max      % Greater loop
 
         for coord = 1:length(coordinate_list)
-
             local_time = 0;
 
             while local_time <= p.disperse_frequency    % Lesser loop
     
                 r_1 = rand();
                 r_2 = rand();
-    
-                a_0 = sum(current_reaction_propensities{coord});
+
+                a_0 = sum(cell2mat(current_reaction_propensities{coord}));
     
                 tau = (1/a_0) * log(1/r_1);
     
@@ -63,8 +64,8 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
                 mu = 0;
                 summ = 0;
                 target = r_2*a_0;   % target is some random percentage of the total propensities a_0
-                for reaction = 1:size(reactions, 2)
-                    summ = summ + current_reaction_propensities{coord}(reaction);
+                for reaction = 1:size(reactions, 1)
+                    summ = summ + current_reaction_propensities{coord}{reaction};
                     if summ > target
                         mu = reaction;  % the reaction that happens to pass the target value first will occur.
                         break
@@ -72,21 +73,21 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
                 end
 
                 % Change concentrations and update propensities
-                for reactant = 1:size(reactions{mu}{2}, 2)
+                for reactant = 1:size(reactions{mu}{2}, 1)
                     % subtract the number of particles that react from the current counts
                     index = strcmp(current_chemical_counts{coord}(1,:), reactions{mu}{2}{reactant});
-                    current_chemical_counts{coord}(2,index) = current_chemical_counts{coord}(2,index) - reactions{mu}{3}{reactant};
-                    if current_chemical_counts{coord}(2,index) < 0
+                    current_chemical_counts{coord}{2,index} = current_chemical_counts{coord}{2,index} - reactions{mu}{3}{reactant};
+                    if current_chemical_counts{coord}{2,index} < 0
                         fprintf("Negative concentration detected >:3\n");
                         fprintf("Offending reaction: " + num2str(mu) + "\n");
                         fprintf("Offending propensity: " + current_reaction_propensities{coord}(mu) + "\n");
                         error = true;
                     end
                 end
-                for product = 1:size(full_network{mu}{4}, 2)
+                for product = 1:size(reactions{mu}{4}, 1)
                     % Add number of products formed to current counts
                     index = strcmp(current_chemical_counts{coord}(1,:), reactions{mu}{4}{product});
-                    current_chemical_counts{coord}(2,index) = current_chemical_counts{coord}(2,index) + reactions{mu}{5}{product};
+                    current_chemical_counts{coord}{2,index} = current_chemical_counts{coord}{2,index} + reactions{mu}{5}{product};
                 end
                 if error == true
                     break
@@ -102,7 +103,7 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
                     for product = 1:length(reactions{mu}{4})
                         affected_species = [affected_species, reactions{mu}{4}{product}];
                     end
-                    for affected_reaction = 1:size(reactions, 2)
+                    for affected_reaction = 1:size(reactions, 1)
                         if any(ismember(string(reactions{affected_reaction}{2}), affected_species))
                             affected_reaction_indices = [affected_reaction_indices, affected_reaction];
                         end
@@ -123,6 +124,7 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
                 local_time = local_time + tau;
                 if local_time > p.disperse_frequency
                     local_time = p.disperse_frequency;
+                    concentration_tracker{coord}(end+1,:) = current_chemical_counts{coord}(2,:);
                     break
                 end
 

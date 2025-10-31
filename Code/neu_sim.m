@@ -1,4 +1,4 @@
-function [reactions, ring_list, base_species, species_counts, member_species_record, current_reaction_propensities, p] = neu_sim(options)
+function [reactions, ring_list, base_species, species_counts, member_species_record, current_reaction_propensities, concentration_tracker, p] = neu_sim(options)
 
 % Smarter version of the original CHTC sim.
 % Reduces hard-coding and therefore hopefully mistakes.
@@ -43,6 +43,6 @@ function [reactions, ring_list, base_species, species_counts, member_species_rec
     fprintf("Initializing world >w<\n");
     [species_counts, coordinate_list] = init_world(p, reactions, ring_list, base_species, member_species_record);
 
-    [species_counts, time, current_reaction_propensities, current_chemical_counts] = simulate(p, species_counts, reactions, coordinate_list);
+    [species_counts, time, current_reaction_propensities, concentration_tracker] = simulate(p, species_counts, reactions, coordinate_list);
 
 end
