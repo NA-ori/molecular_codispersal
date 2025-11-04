@@ -1,4 +1,4 @@
-function [species_counts, time, current_reaction_propensities, concentration_tracker] = simulate(p, species_counts, reactions, coordinate_list)
+function [species_counts, time, current_reaction_propensities, current_chemical_counts, concentration_tracker] = simulate(p, species_counts, reactions, coordinate_list)
 
     arguments (Input)
         p;
@@ -73,7 +73,7 @@ function [species_counts, time, current_reaction_propensities, concentration_tra
                 end
 
                 % Change concentrations and update propensities
-                for reactant = 1:size(reactions{mu}{2}, 1)
+                for reactant = 1:size(reactions{mu}{2}, 2)
                     % subtract the number of particles that react from the current counts
                     index = strcmp(current_chemical_counts{coord}(1,:), reactions{mu}{2}{reactant});
                     current_chemical_counts{coord}{2,index} = current_chemical_counts{coord}{2,index} - reactions{mu}{3}{reactant};
@@ -84,7 +84,7 @@ function [species_counts, time, current_reaction_propensities, concentration_tra
                         error = true;
                     end
                 end
-                for product = 1:size(reactions{mu}{4}, 1)
+                for product = 1:size(reactions{mu}{4}, 2)
                     % Add number of products formed to current counts
                     index = strcmp(current_chemical_counts{coord}(1,:), reactions{mu}{4}{product});
                     current_chemical_counts{coord}{2,index} = current_chemical_counts{coord}{2,index} + reactions{mu}{5}{product};
@@ -129,6 +129,11 @@ function [species_counts, time, current_reaction_propensities, concentration_tra
                 end
 
             end
+        end
+
+        if error == true
+            fprintf("Simulation ended because an error was encountered! ;__;\n")
+            break
         end
         
         t = t + p.disperse_frequency;

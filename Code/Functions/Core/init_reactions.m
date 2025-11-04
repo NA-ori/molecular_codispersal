@@ -7,7 +7,7 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
         p;
         options.rings {mustBeInteger} = 2;
         options.subcycles_per_ring = [3,3];
-        options.prop_forms = [0,1];
+        options.prop_forms = [1,0];
         options.formation_type = ["split", "split"];
         options.reac_rate = [0.01,0.01];
         options.must_adsorb = [1,1];
@@ -39,9 +39,9 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
             % link subcycles through waste:
             mutualist_waste = "";
             if current_sub == options.subcycles_per_ring
-                mutualist_waste = "sp_r" + string(current_ring) + "_" + string(1) + "w";
+                mutualist_waste = "sp_r" + string(current_ring) + "_" + string(1) + "_w";
             else
-                mutualist_waste = "sp_r" + string(current_ring) + "_" + string(current_sub + 1) + "w";
+                mutualist_waste = "sp_r" + string(current_ring) + "_" + string(current_sub + 1) + "_w";
             end
 
             member_species_list = [member_species_list, member_species];
@@ -104,40 +104,40 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
                     reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {free_reactants_list}, reac_stoich, "prop_break"};
 
                 elseif options.subcycles_per_ring(current_ring) == 3
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_ad", "spr1_2_ad"}, {1,1}, {"spr1_1_2_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_2_prop"}, {1}, {"spr1_1_ad", "spr1_2_ad"}, {1,1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_ad", "spr1_3_ad"}, {1,1}, {"spr1_1_3_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_3_prop"}, {1}, {"spr1_1_ad", "spr1_3_ad"}, {1,1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_ad", "spr1_3_ad"}, {1,1}, {"spr1_2_3_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_3_prop"}, {1}, {"spr1_2_ad", "spr1_3_ad"}, {1,1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_2_prop", "spr1_3_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_3_prop", "spr1_2_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_2_3_prop", "spr1_1_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {"spr1_1_diff", "spr1_2_diff", "spr1_3_diff"}, {1,1,1}, "prop_break"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, {"sp_r1_1_2_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_2_prop"}, {1}, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_3_ad"}, {1,1}, {"sp_r1_1_3_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_3_prop"}, {1}, {"sp_r1_1_ad", "sp_r1_3_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_2_ad", "sp_r1_3_ad"}, {1,1}, {"sp_r1_2_3_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_2_3_prop"}, {1}, {"sp_r1_2_ad", "sp_r1_3_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"sp_r1_1_2_prop", "sp_r1_3_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"sp_r1_1_3_prop", "sp_r1_2_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"sp_r1_2_3_prop", "sp_r1_1_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {"sp_r1_1_diff", "sp_r1_2_diff", "sp_r1_3_diff"}, {1,1,1}, "prop_break"};
 
                 elseif options.subcycles_per_ring(current_ring) == 4
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_ad", "spr1_2_ad"}, {1,1}, {"spr1_1_2_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_2_prop"}, {1}, {"spr1_1_ad", "spr1_2_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, {"sp_r1_1_2_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_2_prop"}, {1}, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, "init_prop"};
 
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_ad", "spr1_3_ad"}, {1,1}, {"spr1_1_3_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_3_prop"}, {1}, {"spr1_1_ad", "spr1_3_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_3_ad"}, {1,1}, {"sp_r1_1_3_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_3_prop"}, {1}, {"sp_r1_1_ad", "sp_r1_3_ad"}, {1,1}, "init_prop"};
 
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_ad", "spr1_4_ad"}, {1,1}, {"spr1_1_4_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_1_4_prop"}, {1}, {"spr1_1_ad", "spr1_4_ad"}, {1,1}, "init_prop"};                    
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_4_ad"}, {1,1}, {"sp_r1_1_4_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_4_prop"}, {1}, {"sp_r1_1_ad", "sp_r1_4_ad"}, {1,1}, "init_prop"};                    
 
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_ad", "spr1_3_ad"}, {1,1}, {"spr1_2_3_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_3_prop"}, {1}, {"spr1_2_ad", "spr1_3_ad"}, {1,1}, "init_prop"};  
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_2_ad", "sp_r1_3_ad"}, {1,1}, {"sp_r1_2_3_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_2_3_prop"}, {1}, {"sp_r1_2_ad", "sp_r1_3_ad"}, {1,1}, "init_prop"};  
 
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_ad", "spr1_4_ad"}, {1,1}, {"spr1_2_4_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_2_4_prop"}, {1}, {"spr1_2_ad", "spr1_4_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_2_ad", "sp_r1_4_ad"}, {1,1}, {"sp_r1_2_4_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_2_4_prop"}, {1}, {"sp_r1_2_ad", "sp_r1_4_ad"}, {1,1}, "init_prop"};
 
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_3_ad", "spr1_4_ad"}, {1,1}, {"spr1_3_4_prop"}, {1}, "init_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {"spr1_3_4_prop"}, {1}, {"spr1_3_ad", "spr1_4_ad"}, {1,1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_3_ad", "sp_r1_4_ad"}, {1,1}, {"sp_r1_3_4_prop"}, {1}, "init_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_3_4_prop"}, {1}, {"sp_r1_3_ad", "sp_r1_4_ad"}, {1,1}, "init_prop"};
 
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_2_prop", "spr1_3_4_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_3_prop", "spr1_2_4_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_funnel_rate, {"spr1_1_4_prop", "spr1_2_3_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
-                    reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {"spr1_1_diff", "spr1_2_diff", "spr1_3_diff", "spr1_4_diff"}, {1,1,1,1}, "prop_break"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"sp_r1_1_2_prop", "sp_r1_3_4_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"sp_r1_1_3_prop", "sp_r1_2_4_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_funnel_rate, {"sp_r1_1_4_prop", "sp_r1_2_3_prop"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,4}, "end_prop"};
+                    reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {"sp_r1_1_diff", "sp_r1_2_diff", "sp_r1_3_diff", "sp_r1_4_diff"}, {1,1,1,1}, "prop_break"};
 
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
