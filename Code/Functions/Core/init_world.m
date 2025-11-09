@@ -13,26 +13,36 @@ function [species_counts, coordinate_list] = init_world(p, reactions, ring_list,
     end
 
     % Initialize coordinate system
-
-    D = p.separation_distance;
-    s = p.sites;
-    R = s*D;
-
     coordinate_list = {};
 
-    for x = 0:D:(D*(s-1))
-        for y = 0:D:(D*(s-1))
-            coordinate_list{1,end+1} = {};
-            coordinate_list{1,end}{1,1} = x;
-            coordinate_list{1,end}{1,2} = y;
-            coordinate_list{1,end}{1,3} = (0-x-y);
-        end
-    end
+    if p.shape == "parallelogram"
+        D = p.separation_distance;
+        s = p.sites;
+        R = s*D;
     
+        for x = 0:D:(D*(s-1))
+            for y = 0:D:(D*(s-1))
+                coordinate_list{1,end+1} = {};
+                coordinate_list{1,end}{1,1} = x;
+                coordinate_list{1,end}{1,2} = y;
+                coordinate_list{1,end}{1,3} = (0-x-y);
+            end
+        end
+
+    elseif p.shape == "hex"
+    end
+
     % Calculate probability distribution around each point
     prob_cloud = cell(1,size(coordinate_list,2));
-    for n0 = 1:size(coordinate_list,2)
-        for n1 = 1:size(coordinate_list,2)
+    for nZero = 1:size(coordinate_list,2)
+        for nOne = 1:size(coordinate_list,2)
+
+            t = R;  % Revise t to reflect diffusion rates (or make 2 versions of prob_cloud)
+            n01 = coordinate_list{nZero}{1}; n02 = coordinate_list{nZero}{2};
+            n1 = coordinate_list{nOne}{1}; n2 = coordinate_list{nOne}{2};
+
+            P = occupation_p(p.shape, R, 1, t, n01, n02, n1, n2);
+            prob_cloud{nZero}{1,end+1} = P;
 
         end
     end
