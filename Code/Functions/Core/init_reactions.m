@@ -1,7 +1,7 @@
 function [reactions, ring_list, member_species_record, base_species] = init_reactions(p, options)
     %rings, subcycles_per_ring, prop_forms, formation_type, reac_rate, must_adsorb, fac_rings)
 
-% Better network generation code.
+% Initialize a basic set of reactions.
 
     arguments (Input)
         p;

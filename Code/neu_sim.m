@@ -9,8 +9,9 @@ function [reactions, ring_list, base_species, species_counts, member_species_rec
 % inputs.
 
     arguments (Input)
-        % Inputs are modified into lists to allow more flexibility
-        options.dim = 10;
+        options.shape = "parallelogram";
+        options.separation_distance = 2;
+        options.sites = 2;
         options.t_max = 10000;
         options.default_concentration = 0;
         options.food_concentration = 500;
