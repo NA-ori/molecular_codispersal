@@ -41,19 +41,22 @@ function [species_counts, coordinate_list, prob_cloud] = init_world(p, reactions
         coordinate_list{1,end}{1,2} = 0;
         coordinate_list{1,end}{1,3} = 0;
 
+        used_sites = ["000"];
+
         for ring = 1:s
             current_rings = size(coordinate_list,2);
             for coord = 1:current_rings
-                x = coordinate_list{coord}{1}; y = coordinate_list{coord}{2}; z = coordinate_list{coord}{3};
+                x = coordinate_list{1,coord}{1}; y = coordinate_list{1,coord}{2}; z = coordinate_list{1,coord}{3};
                 friends = neighbors(x,y,z,D);
                 for friend = 1:size(friends,2)
-                    coordinate_list{1,end+1} = friends{friend};
+                    new_coord = strcat(num2str(friends{1,friend}{1}), num2str(friends{1,friend}{2}), num2str(friends{1,friend}{3}));
+                    if ~any(strcmp(used_sites, new_coord))
+                        coordinate_list{1,end+1} = friends{1,friend};
+                        used_sites = [used_sites, new_coord];
+                    end
                 end
             end
         end
-
-        % Find a functional method for removing duplicates
-        coordinate_list = unique(coordinate_list);
     end
 
     % Calculate probability distribution around each point
