@@ -1,4 +1,4 @@
-function [species_counts, coordinate_list] = init_world(p, reactions, ring_list, base_species, member_species_record)
+function [species_counts, coordinate_list, prob_cloud] = init_world(p, reactions, ring_list, base_species, member_species_record)
     % Initialize the dimensions of the world and all the data structures
     % that will hold concentration information
 
@@ -16,6 +16,7 @@ function [species_counts, coordinate_list] = init_world(p, reactions, ring_list,
     coordinate_list = {};
 
     if p.shape == "parallelogram"
+
         D = p.separation_distance;
         s = p.sites;
         R = s*D;
@@ -30,6 +31,29 @@ function [species_counts, coordinate_list] = init_world(p, reactions, ring_list,
         end
 
     elseif p.shape == "hex"
+
+        D = p.separation_distance;
+        s = p.sites;
+        R = s*D;
+
+        coordinate_list{1,end+1} = {};
+        coordinate_list{1,end}{1,1} = 0;
+        coordinate_list{1,end}{1,2} = 0;
+        coordinate_list{1,end}{1,3} = 0;
+
+        for ring = 1:s
+            current_rings = size(coordinate_list,2);
+            for coord = 1:current_rings
+                x = coordinate_list{coord}{1}; y = coordinate_list{coord}{2}; z = coordinate_list{coord}{3};
+                friends = neighbors(x,y,z,D);
+                for friend = 1:size(friends,2)
+                    coordinate_list{1,end+1} = friends{friend};
+                end
+            end
+        end
+
+        % Find a functional method for removing duplicates
+        coordinate_list = unique(coordinate_list);
     end
 
     % Calculate probability distribution around each point

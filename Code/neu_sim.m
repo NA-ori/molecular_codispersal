@@ -43,8 +43,8 @@ function [reactions, ring_list, base_species, species_counts, member_species_rec
     fprintf("Initializing reactions >w<\n");
     [reactions, ring_list, member_species_record, base_species] = init_reactions(p);
     fprintf("Initializing world >w<\n");
-    [species_counts, coordinate_list] = init_world(p, reactions, ring_list, base_species, member_species_record);
+    [species_counts, coordinate_list, prob_cloud] = init_world(p, reactions, ring_list, base_species, member_species_record);
 
-    [species_counts, time, current_reaction_propensities, current_chemical_counts, concentration_tracker] = simulate(p, species_counts, reactions, coordinate_list);
+    [species_counts, time, current_reaction_propensities, current_chemical_counts, concentration_tracker] = simulate(p, species_counts, reactions, coordinate_list, prob_cloud);
 
 end
