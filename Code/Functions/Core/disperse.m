@@ -1,4 +1,4 @@
-function [current_chemical_counts, current_reaction_propensities] = disperse(p, update_mask, diff_mask, current_chemical_counts, current_reaction_propensities, coordinate_list, prob_cloud, prop_prob_cloud)
+function [current_chemical_counts] = disperse(p, update_mask, diff_mask, current_chemical_counts, coordinate_list, prob_cloud, prop_prob_cloud)
 
     % For the moment, this is a placeholder. A more accurate dispersal
     % function will be added once the basic concept is tested.
@@ -8,7 +8,6 @@ function [current_chemical_counts, current_reaction_propensities] = disperse(p, 
         update_mask;
         diff_mask;
         current_chemical_counts;
-        current_reaction_propensities;
         coordinate_list;
         prob_cloud;
         prop_prob_cloud;
@@ -32,19 +31,6 @@ function [current_chemical_counts, current_reaction_propensities] = disperse(p, 
                 end
             end
         end
-    end
-
-    % Move things around
-    for coord = 1:size(current_chemical_counts,2)
-        for species = 1:size(current_chemical_counts{1,coord},2)
-            current_chemical_counts{1,coord}{2,species} = current_chemical_counts{1,coord}{2,species} + update_mask{1,coord}{2,species};
-        end
-    end
-
-    % Update reaction propensities
-    for coord = 1:size(coordinate_list, 2)
-        all_reactions = 1:size(current_reaction_propensities{1,coord},2);
-        current_reaction_propensities = update_propensities(all_reactions, coord, reactions, current_chemical_counts, current_reaction_propensities);
     end
 
 end

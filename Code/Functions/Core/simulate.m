@@ -42,6 +42,14 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
 
     concentration_tracker = current_chemical_counts;
 
+    % Some stuff for handling diffusion
+    update_mask = cell(1,length(current_chemical_counts));
+    for coord = 1:size(update_mask,2)
+        update_mask{1, coord} = cellstr(base_species);
+        update_mask{1, coord}(2,:) = {0};
+    end
+    diff_mask = contains(base_species, "_diff");
+
 
     %%%%%%%%%%%%%%%%%%%%%%%%%
     % THE ACTUAL SIMULATION %
@@ -139,10 +147,17 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
         
         t = t + p.disperse_frequency;
 
-        % Run the dispersal function
+        % ~~~~~~~~~~~~~~~~~ Disperse! ~~~~~~~~~~~~~~~~~
+        
+        current_chemical_counts = disperse(p, update_mask, diff_mask, current_chemical_counts, coordinate_list, prob_cloud, prop_prob_cloud);
 
+        % Update propensities
+        for coord = 1:size(coordinate_list, 2)
+            all_reactions = 1:size(current_reaction_propensities{1,coord},2);
+            current_reaction_propensities = update_propensities(all_reactions, coord, reactions, current_chemical_counts, current_reaction_propensities);
+        end
 
-        % If it is time for a disturbance, disturb
+        % ~~~~~~~~~ If it is time for a disturbance, disturb ~~~~~~~~~~~~~
 
 
         if t > p.t_max
