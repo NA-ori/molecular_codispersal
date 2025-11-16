@@ -61,17 +61,28 @@ function [species_counts, coordinate_list, prob_cloud] = init_world(p, reactions
 
     % Calculate probability distribution around each point
     prob_cloud = cell(1,size(coordinate_list,2));
+    prop_prob_cloud = cell(1,size(coordinate_list,2));
     for nZero = 1:size(coordinate_list,2)
+        missing_prob = 1;
+        prop_missing_prob = 1;
         for nOne = 1:size(coordinate_list,2)
 
             t = R;  % Revise t to reflect diffusion rates (or make 2 versions of prob_cloud)
+            propt = floor(R/sqrt(p.rings));
             n01 = coordinate_list{nZero}{1}; n02 = coordinate_list{nZero}{2};
             n1 = coordinate_list{nOne}{1}; n2 = coordinate_list{nOne}{2};
 
             P = occupation_p(p.shape, R, 1, t, n01, n02, n1, n2);
+            missing_prob = missing_prob - P;
             prob_cloud{nZero}{1,end+1} = P;
 
+            propP = occupation_p(p.shape, R, 1, propt, n01, n02, n1, n2);
+            prop_missing_prob = prop_missing_prob - propP;
+            prop_prob_cloud{nZero}{1,end+1} = propP;
+            
         end
+        prob_cloud{nZero}{nZero} = prob_cloud{nZero}{nZero} + missing_prob; % Make total probs = 1. Higher probability of a particle staying in original site.
+        prop_prob_cloud{nZero}{nZero} = prop_prob_cloud{nZero}{nZero} + prop_missing_prob;
     end
 
 
