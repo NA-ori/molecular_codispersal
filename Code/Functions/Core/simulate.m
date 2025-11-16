@@ -147,6 +147,18 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
         
         t = t + p.disperse_frequency;
 
+
+        % ~~~~~~~~~~~~~~~~~ Outflow! ~~~~~~~~~~~~~~~~~~
+
+        current_chemical_counts = outflow(p, diff_mask, current_chemical_counts, coordinate_list);
+
+        % Update propensities
+        for coord = 1:size(coordinate_list, 2)
+            all_reactions = 1:size(current_reaction_propensities{1,coord},2);
+            current_reaction_propensities = update_propensities(all_reactions, coord, reactions, current_chemical_counts, current_reaction_propensities);
+        end
+
+
         % ~~~~~~~~~~~~~~~~~ Disperse! ~~~~~~~~~~~~~~~~~
         
         current_chemical_counts = disperse(p, update_mask, diff_mask, current_chemical_counts, coordinate_list, prob_cloud, prop_prob_cloud);
@@ -157,8 +169,22 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
             current_reaction_propensities = update_propensities(all_reactions, coord, reactions, current_chemical_counts, current_reaction_propensities);
         end
 
-        % ~~~~~~~~~ If it is time for a disturbance, disturb ~~~~~~~~~~~~~
 
+        % ~~~~~~~~~~~~~~~~~ Disturb! ~~~~~~~~~~~~~~~~~~
+
+        if t > next_disturbance
+
+            disturbed_coord = randsample(length(coordinate_list), 1);
+            current_reaction_propensities = disturb(p, current_chemical_counts, disturbed_coord, base_species);
+
+            % Update propensities
+            all_reactions = 1:size(current_reaction_propensities{1,disturbed_coord},2);
+            current_reaction_propensities = update_propensities(all_reactions, disturbed_coord, reactions, current_chemical_counts, current_reaction_propensities);
+
+        end
+
+
+        % ~~~~~~~~~~~~~~~ Time to stop? ~~~~~~~~~~~~~~~
 
         if t > p.t_max
             break
