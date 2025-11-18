@@ -33,4 +33,11 @@ function [current_chemical_counts] = disperse(p, update_mask, diff_mask, current
         end
     end
 
+    % Move things around
+    for coord = 1:size(current_chemical_counts,2)
+        for species = 1:size(current_chemical_counts{1,coord},2)
+            current_chemical_counts{1,coord}{2,species} = current_chemical_counts{1,coord}{2,species} + update_mask{1,coord}{2,species};
+        end
+    end
+
 end

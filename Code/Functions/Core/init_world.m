@@ -1,4 +1,4 @@
-function [species_counts, coordinate_list, prob_cloud] = init_world(p, reactions, ring_list, base_species, member_species_record)
+function [species_counts, coordinate_list, prob_cloud, prop_prob_cloud] = init_world(p, reactions, ring_list, base_species, member_species_record)
     % Initialize the dimensions of the world and all the data structures
     % that will hold concentration information
 
@@ -68,7 +68,7 @@ function [species_counts, coordinate_list, prob_cloud] = init_world(p, reactions
         for nOne = 1:size(coordinate_list,2)
 
             t = R;  % Revise t to reflect diffusion rates (or make 2 versions of prob_cloud)
-            propt = floor(R/sqrt(p.rings));
+            propt = floor(R/sqrt(max(p.subcycles_per_ring)));   % THIS IS CHEATING, CORRECT THIS
             n01 = coordinate_list{nZero}{1}; n02 = coordinate_list{nZero}{2};
             n1 = coordinate_list{nOne}{1}; n2 = coordinate_list{nOne}{2};
 

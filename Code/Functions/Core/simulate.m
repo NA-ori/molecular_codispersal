@@ -1,11 +1,13 @@
-function [species_counts, time, current_reaction_propensities, current_chemical_counts, concentration_tracker] = simulate(p, species_counts, reactions, coordinate_list, prob_cloud)
+function [species_counts, time, current_reaction_propensities, current_chemical_counts, concentration_tracker] = simulate(p, base_species, species_counts, reactions, coordinate_list, prob_cloud, prop_prob_cloud)
 
     arguments (Input)
         p;
+        base_species;
         species_counts;
         reactions;
         coordinate_list;
         prob_cloud;
+        prop_prob_cloud;
     end
 
     % Initial variables

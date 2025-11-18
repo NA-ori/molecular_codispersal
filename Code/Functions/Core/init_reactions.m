@@ -1,35 +1,35 @@
-function [reactions, ring_list, member_species_record, base_species] = init_reactions(p, options)
+function [reactions, ring_list, member_species_record, base_species] = init_reactions(p)
     %rings, subcycles_per_ring, prop_forms, formation_type, reac_rate, must_adsorb, fac_rings)
 
 % Initialize a basic set of reactions.
 
     arguments (Input)
         p;
-        options.rings {mustBeInteger} = 2;
-        options.subcycles_per_ring = [3,3];
-        options.prop_forms = [1,0];
-        options.formation_type = ["split", "split"];
-        options.reac_rate = [0.01,0.01];
-        options.must_adsorb = [1,1];
-        options.fac_rings = [0,0];
+        % p.rings {mustBeInteger} = 2;
+        % p.subcycles_per_ring = [3,3];
+        % p.prop_forms = [1,0];
+        % p.formation_type = ["split", "split"];
+        % p.reac_rate = [0.01,0.01];
+        % p.must_adsorb = [1,1];
+        % p.fac_rings = [0,0];
     end
 
     reactions = {};
-    ring_list = cell(1,options.rings);
+    ring_list = cell(1,p.rings);
     base_species = [];
     ring_species = []; % will contain central ring species ONLY
-    member_species_record = cell(1,options.rings);
+    member_species_record = cell(1,p.rings);
 
-    for current_ring = 1:options.rings
+    for current_ring = 1:p.rings
         member_species_list = [];
-        if options.must_adsorb(current_ring) == 1
+        if p.must_adsorb(current_ring) == 1
             adsorb_tag = "_ad";
         else
             adsorb_tag = "_diff";
         end
 
-        for current_sub = 1:options.subcycles_per_ring(current_ring)
-            curren_reac_rate = options.reac_rate(current_ring);
+        for current_sub = 1:p.subcycles_per_ring(current_ring)
+            curren_reac_rate = p.reac_rate(current_ring);
 
             % generate a member species and intermediates:
             member_species = "sp_r" + string(current_ring) + "_" + string(current_sub);
@@ -38,7 +38,7 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
 
             % link subcycles through waste:
             mutualist_waste = "";
-            if current_sub == options.subcycles_per_ring
+            if current_sub == p.subcycles_per_ring
                 mutualist_waste = "sp_r" + string(current_ring) + "_" + string(1) + "_w";
             else
                 mutualist_waste = "sp_r" + string(current_ring) + "_" + string(current_sub + 1) + "_w";
@@ -55,7 +55,7 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
             reactions{end + 1,1} = {curren_reac_rate, {append(member_species_intermediate, adsorb_tag), append(member_species_waste, adsorb_tag)}, {1, 1}, {append(member_species, adsorb_tag), "F", "site"}, {1, 1, 1}, "autocat"};
             reactions{end + 1,1} = {curren_reac_rate, {append(member_species_intermediate, adsorb_tag), append(mutualist_waste, adsorb_tag)}, {1, 1}, {append(member_species, adsorb_tag)}, {2}, "autocat"};
             reactions{end + 1,1} = {curren_reac_rate, {append(member_species, adsorb_tag)}, {2}, {append(member_species_intermediate, adsorb_tag), append(mutualist_waste, adsorb_tag)}, {1, 1}, "autocat"};
-            if options.fac_rings(current_ring) == 1
+            if p.fac_rings(current_ring) == 1
                 reactions{end + 1,1} = {curren_reac_rate/p.independence_disadvantage, {append(member_species_intermediate, adsorb_tag), "F"}, {1, 1}, {append(member_species, adsorb_tag)}, {2}, "autocat"};
                 reactions{end + 1,1} = {curren_reac_rate/p.independence_disadvantage, {append(member_species, adsorb_tag)}, {2}, {append(member_species_intermediate, adsorb_tag), "F"}, {1, 1}, "autocat"};
             end
@@ -63,7 +63,7 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
         end
 
 
-        if options.prop_forms(current_ring) == 1
+        if p.prop_forms(current_ring) == 1
             % Add propagule formation here if necessary
             % Two methods for doing this
 
@@ -89,21 +89,21 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
 
             reac_stoich = num2cell(ones(1, length(member_species_list)));
 
-            if options.formation_type(current_ring) == "cheater"
+            if p.formation_type(current_ring) == "cheater"
                 
                 reactions{end + 1,1} = {p.prop_form_rate, reactants_list, reac_stoich, {("prop_" + string(current_ring)), "site"}, {1, length(member_species_list)}, "prop_form"};
                 reactions{end + 1,1} = {p.prop_form_rate, {("prop_" + string(current_ring))}, {1}, free_reactants_list, reac_stoich, "prop_form"};
 
-            elseif options.formation_type(current_ring) == "split"
+            elseif p.formation_type(current_ring) == "split"
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 % Cheating for now. Need to add auto-generation!%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if options.subcycles_per_ring(current_ring) == 2
+                if p.subcycles_per_ring(current_ring) == 2
                     reactions{end + 1,1} = {p.prop_formation_rate, reactants_list, reac_stoich, {("prop_" + string(current_ring)), "site"}, {1, 2}, "prop_form"};
                     reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {free_reactants_list}, reac_stoich, "prop_break"};
 
-                elseif options.subcycles_per_ring(current_ring) == 3
+                elseif p.subcycles_per_ring(current_ring) == 3
                     reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, {"sp_r1_1_2_prop"}, {1}, "init_prop"};
                     reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_2_prop"}, {1}, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, "init_prop"};
                     reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_3_ad"}, {1,1}, {"sp_r1_1_3_prop"}, {1}, "init_prop"};
@@ -115,7 +115,7 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
                     reactions{end + 1,1} = {p.prop_funnel_rate, {"sp_r1_2_3_prop", "sp_r1_1_ad"}, {1,1}, {("prop_" + string(current_ring)), "site"}, {1,3}, "end_prop"};
                     reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, {"sp_r1_1_diff", "sp_r1_2_diff", "sp_r1_3_diff"}, {1,1,1}, "prop_break"};
 
-                elseif options.subcycles_per_ring(current_ring) == 4
+                elseif p.subcycles_per_ring(current_ring) == 4
                     reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, {"sp_r1_1_2_prop"}, {1}, "init_prop"};
                     reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_2_prop"}, {1}, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, "init_prop"};
 
