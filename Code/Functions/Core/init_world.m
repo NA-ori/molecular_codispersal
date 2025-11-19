@@ -1,4 +1,4 @@
-function [species_counts, coordinate_list, prob_cloud, prop_prob_cloud] = init_world(p, reactions, ring_list, base_species, member_species_record)
+function [I] = init_world(p, I)
     % Initialize the dimensions of the world and all the data structures
     % that will hold concentration information
 
@@ -6,11 +6,15 @@ function [species_counts, coordinate_list, prob_cloud, prop_prob_cloud] = init_w
 
     arguments (Input)
         p;
-        reactions;
-        ring_list;
-        base_species;
-        member_species_record;
+        I;
     end
+
+    % Pop variables out of I
+    reactions = I.reactions;
+    ring_list = I.ring_list;
+    base_species = I.base_species;
+    member_species_record = I.member_species_record;
+
 
     % Initialize coordinate system
     coordinate_list = {};
@@ -113,5 +117,12 @@ function [species_counts, coordinate_list, prob_cloud, prop_prob_cloud] = init_w
         end
 
     end
+
+    % Stick outputs into I
+
+    I.species_counts = species_counts;
+    I.coordinate_list = coordinate_list;
+    I.prob_cloud = prob_cloud;
+    I.prop_prob_cloud = prop_prob_cloud;
     
 end

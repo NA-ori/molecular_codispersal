@@ -1,14 +1,19 @@
-function [species_counts, time, current_reaction_propensities, current_chemical_counts, concentration_tracker] = simulate(p, base_species, species_counts, reactions, coordinate_list, prob_cloud, prop_prob_cloud)
+function [O, I] = simulate(p, I, O)
 
     arguments (Input)
         p;
-        base_species;
-        species_counts;
-        reactions;
-        coordinate_list;
-        prob_cloud;
-        prop_prob_cloud;
+        I;
+        O;
     end
+
+    % Extract variables from I
+    base_species = I.base_species;
+    species_counts = I.species_counts;
+    reactions = I.reactions;
+    coordinate_list = I.coordinate_list;
+    prob_cloud = I.prob_cloud;
+    prop_prob_cloud = I.prop_prob_cloud;
+
 
     % Initial variables
     sample_interval = p.t_max / p.sample_number-1;
@@ -22,7 +27,7 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
 
     error = false;
     t = 0;
-    time = [];
+    time = [t];
 
     % Set up the update key
     reaction_update_key = cell(1,size(reactions,1));
@@ -148,6 +153,7 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
         end
         
         t = t + p.disperse_frequency;
+        time = [time; t];
 
 
         % ~~~~~~~~~~~~~~~~~ Outflow! ~~~~~~~~~~~~~~~~~~
@@ -193,5 +199,13 @@ function [species_counts, time, current_reaction_propensities, current_chemical_
         end
 
     end
+
+    % Add variables to output structures
+
+    I.species_counts = species_counts;
+    O.time = time;
+    I.current_reaction_propensities = current_reaction_propensities;
+    I.current_chemical_counts = current_chemical_counts;
+    O.concentration_tracker = concentration_tracker;
 
 end

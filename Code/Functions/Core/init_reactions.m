@@ -1,17 +1,11 @@
-function [reactions, ring_list, member_species_record, base_species] = init_reactions(p)
+function [I] = init_reactions(p, I)
     %rings, subcycles_per_ring, prop_forms, formation_type, reac_rate, must_adsorb, fac_rings)
 
 % Initialize a basic set of reactions.
 
     arguments (Input)
         p;
-        % p.rings {mustBeInteger} = 2;
-        % p.subcycles_per_ring = [3,3];
-        % p.prop_forms = [1,0];
-        % p.formation_type = ["split", "split"];
-        % p.reac_rate = [0.01,0.01];
-        % p.must_adsorb = [1,1];
-        % p.fac_rings = [0,0];
+        I;
     end
 
     reactions = {};
@@ -169,5 +163,12 @@ function [reactions, ring_list, member_species_record, base_species] = init_reac
         end
     end
     base_species = unique(base_species);    % remove all non-unique species
+
+    % Add everything to the internal struct
+
+    I.reactions = reactions;
+    I.ring_list = ring_list;
+    I.member_species_record = member_species_record;
+    I.base_species = base_species;
 
 end
