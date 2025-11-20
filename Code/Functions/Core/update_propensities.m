@@ -1,4 +1,4 @@
-function [updated_propensities] = update_propensities(reactions_to_update, coord, reactions, current_chemical_counts, current_reaction_propensities)
+function [updated_propensities] = update_propensities(reactions_to_update, coord, reactions, current_chemical_counts, current_reaction_propensities, I)
 
     arguments (Input)
         reactions_to_update;
@@ -6,15 +6,18 @@ function [updated_propensities] = update_propensities(reactions_to_update, coord
         reactions;
         current_chemical_counts;
         current_reaction_propensities;
+        I;
     end
+
+    absolute_coord = I.catalyzed_sites_mask(coord);
 
     for i = 1:length(reactions_to_update)
         %reactions_to_update
         reaction = reactions_to_update(i);
         h_i = 1;    % The propensity
         for reactant = 1:length(reactions{reaction}{2})
-            index = strcmp(current_chemical_counts{coord}(1,:), reactions{reaction}{2}{reactant});
-            reactant_count = current_chemical_counts{coord}{2,index};
+            index = strcmp(current_chemical_counts{absolute_coord}(1,:), reactions{reaction}{2}{reactant});
+            reactant_count = current_chemical_counts{absolute_coord}{2,index};
             reactant_stoichiometry = reactions{reaction}{3}{reactant};
 
             if reactant_count < reactant_stoichiometry

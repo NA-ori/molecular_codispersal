@@ -18,6 +18,7 @@ function [I] = init_world(p, I)
 
     % Initialize coordinate system
     coordinate_list = {};
+    I.all_coordinates = {};
 
     if p.shape == "parallelogram"
 
@@ -40,13 +41,12 @@ function [I] = init_world(p, I)
         s = p.sites;
         R = s*D;
 
+        % Make a list of catalyzed sites
+        used_sites = ["000"];
         coordinate_list{1,end+1} = {};
         coordinate_list{1,end}{1,1} = 0;
         coordinate_list{1,end}{1,2} = 0;
         coordinate_list{1,end}{1,3} = 0;
-
-        used_sites = ["000"];
-
         for ring = 1:s
             current_rings = size(coordinate_list,2);
             for coord = 1:current_rings
@@ -61,20 +61,43 @@ function [I] = init_world(p, I)
                 end
             end
         end
+
+        % Make a list of all sites, including empty space
+        second_used_sites = ["000"];
+        I.all_coordinates{1,end+1} = {};
+        I.all_coordinates{1,end}{1,1} = 0;
+        I.all_coordinates{1,end}{1,2} = 0;
+        I.all_coordinates{1,end}{1,3} = 0;
+        for ring = 1:R
+            current_rings = size(I.all_coordinates,2);
+            for coord = 1:current_rings
+                x = I.all_coordinates{1,coord}{1}; y = I.all_coordinates{1,coord}{2}; z = I.all_coordinates{1,coord}{3};
+                friends = neighbors(x,y,z,1);
+                for friend = 1:size(friends,2)
+                    new_coord = strcat(num2str(friends{1,friend}{1}), num2str(friends{1,friend}{2}), num2str(friends{1,friend}{3}));
+                    if ~any(strcmp(second_used_sites, new_coord))
+                        I.all_coordinates{1,end+1} = friends{1,friend};
+                        second_used_sites = [second_used_sites, new_coord];
+                    end
+                end
+            end
+        end
+        catalyzed_sites_mask = find(contains(second_used_sites, used_sites));
+
     end
 
     % Calculate probability distribution around each point
-    prob_cloud = cell(1,size(coordinate_list,2));
-    prop_prob_cloud = cell(1,size(coordinate_list,2));
-    for nZero = 1:size(coordinate_list,2)
+    prob_cloud = cell(1,size(I.all_coordinates,2));
+    prop_prob_cloud = cell(1,size(I.all_coordinates,2));
+    for nZero = 1:size(I.all_coordinates,2)
         missing_prob = 1;
         prop_missing_prob = 1;
-        for nOne = 1:size(coordinate_list,2)
+        for nOne = 1:size(I.all_coordinates,2)
 
             t = R;  % Revise t to reflect diffusion rates (or make 2 versions of prob_cloud)
             propt = floor(R/sqrt(max(p.subcycles_per_ring)));   % THIS IS CHEATING, CORRECT THIS
-            n01 = coordinate_list{nZero}{1}; n02 = coordinate_list{nZero}{2};
-            n1 = coordinate_list{nOne}{1}; n2 = coordinate_list{nOne}{2};
+            n01 = I.all_coordinates{nZero}{1}; n02 = I.all_coordinates{nZero}{2};
+            n1 = I.all_coordinates{nOne}{1}; n2 = I.all_coordinates{nOne}{2};
 
             P = occupation_p(p.shape, R, 1, t, n01, n02, n1, n2);
             missing_prob = missing_prob - P;
@@ -92,13 +115,16 @@ function [I] = init_world(p, I)
 
     % Make separate data structures to keep track of species in every
     % coordinate
-    species_counts = cell(1, size(coordinate_list,2));
-    for coord = 1:size(species_counts, 2)
+    species_counts = cell(1, size(I.all_coordinates,2));
+    for coord = 1:size(I.all_coordinates,2)
         species_counts{1, coord} = cellstr(base_species);
         species_counts{1, coord}(2,:) = {0};
+    end
 
+
+    for c = 1:length(catalyzed_sites_mask)
         % Set starting concentrations of sites and food
-
+        coord = catalyzed_sites_mask(c);
         indeces = strcmp(base_species, 'F');
         species_counts{1, coord}(2,indeces) = {p.food_concentration};
         indeces = strcmp(base_species, 'site');
@@ -124,5 +150,8 @@ function [I] = init_world(p, I)
     I.coordinate_list = coordinate_list;
     I.prob_cloud = prob_cloud;
     I.prop_prob_cloud = prop_prob_cloud;
+    I.used_sites = used_sites;
+    I.second_used_sites = second_used_sites;
+    I.catalyzed_sites_mask = catalyzed_sites_mask;
     
 end

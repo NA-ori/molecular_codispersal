@@ -1,4 +1,4 @@
-function [current_chemical_counts] = outflow(p, diff_mask, current_chemical_counts, coordinate_list)
+function [current_chemical_counts] = outflow(p, diff_mask, current_chemical_counts)
 
     % For the moment, this is a placeholder. A more accurate dispersal
     % function will be added once the basic concept is tested.
@@ -7,7 +7,7 @@ function [current_chemical_counts] = outflow(p, diff_mask, current_chemical_coun
         p;
         diff_mask;
         current_chemical_counts;
-        coordinate_list;
+        %coordinate_list;
     end
 
     % Calculate where everything goes
