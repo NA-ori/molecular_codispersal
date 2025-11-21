@@ -56,6 +56,8 @@ function [O, I] = simulate(p, I, O)
         update_mask{1, coord}(2,:) = {0};
     end
     diff_mask = contains(base_species, "_diff");
+    diff_mask(find(contains(base_species, "prop_"),1)) = 1;
+    I.diff_mask = diff_mask;
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%

@@ -100,10 +100,18 @@ function [I] = init_world(p, I)
             n1 = I.all_coordinates{nOne}{1}; n2 = I.all_coordinates{nOne}{2};
 
             P = occupation_p(p.shape, R, 1, t, n01, n02, n1, n2);
+            % ~~~ The following is a temporary approximation ~~~
+            % ~~~ Figure out why probs are going negative ~~~~~~
+            if P < 0, P = 0; end
+
             missing_prob = missing_prob - P;
             prob_cloud{nZero}{1,end+1} = P;
 
             propP = occupation_p(p.shape, R, 1, propt, n01, n02, n1, n2);
+            % ~~~ The following is a temporary approximation ~~~
+            % ~~~ Figure out why probs are going negative ~~~~~~
+            if propP < 0, propP = 0; end
+
             prop_missing_prob = prop_missing_prob - propP;
             prop_prob_cloud{nZero}{1,end+1} = propP;
             
