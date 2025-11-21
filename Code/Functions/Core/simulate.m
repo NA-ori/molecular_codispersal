@@ -58,6 +58,7 @@ function [O, I] = simulate(p, I, O)
     diff_mask = contains(base_species, "_diff");
     diff_mask(find(contains(base_species, "prop_"),1)) = 1;
     I.diff_mask = diff_mask;
+    I.out_mask = diff_mask; I.out_mask(find(contains(base_species, "F"),1)) = 1;
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -161,7 +162,7 @@ function [O, I] = simulate(p, I, O)
 
         % ~~~~~~~~~~~~~~~~~ Outflow! ~~~~~~~~~~~~~~~~~~
 
-        current_chemical_counts = outflow(p, diff_mask, current_chemical_counts);
+        current_chemical_counts = outflow(p, diff_mask, current_chemical_counts, I);
 
         % Update propensities
         for coord = 1:size(coordinate_list, 2)
