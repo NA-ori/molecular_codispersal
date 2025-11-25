@@ -39,13 +39,12 @@ function [I] = init_world(p, I)
 
         D = p.separation_distance;
         s = p.sites;
-        R = s*D + floor(D/2);   I.R = R;
-        omega = 3*R*(R+1) + 1;  I.omega = omega;
+        R = s*D;
+        omega = 3*R*(R+1) + 1;
 
         I.all_coordinates = cell(1,omega);
         coordinate_list = {};
         catalyzed_sites_mask = [];
-        origin = 0;
 
         % Set up pixels
         loops = 1;
@@ -53,15 +52,12 @@ function [I] = init_world(p, I)
             for y = -R:R
                 for z = -R:R
                     if (x+y+z) == 0
-                        I.all_coordinates{1,loops}{1} = x; I.all_coordinates{1,loops}{2} = y; I.all_coordinates{1,loops}{3} = z;
+                        I.all_coordinates{1,loops}{1} = x; I.all_coordinates{1,loops}{2} = y; coords{1,loops}{3} = z;
+                        loops = loops + 1;
                         if mod(abs(x),D) == 0 && mod(abs(y),D) == 0 && mod(abs(z),D) == 0
-                            coordinate_list{1,end+1}{1} = x; coordinate_list{1,end}{2} = y; coordinate_list{1,end}{3} = z;
+                            catalyzed_coords{1,end+1}{1} = x; catalyzed_coords{1,end}{2} = y; catalyzed_coords{1,end}{3} = z;
                             catalyzed_sites_mask = [catalyzed_sites_mask, loops];
                         end
-                        if x == 0 && y == 0 && z == 0
-                            origin = loops;
-                        end
-                        loops = loops + 1;
                     end
                 end
             end
@@ -130,8 +126,7 @@ function [I] = init_world(p, I)
             for seed = 1:size(member_species_record{1,ring},2)
                 temp_member_species_record{1,ring}{seed} = convertStringsToChars(temp_member_species_record{1,ring}{seed} + p.seed_state(ring));
             end
-            %if coord == p.seed_locations(ring)
-            if coord == origin
+            if coord == p.seed_locations(ring)
                 indeces = matches(base_species, temp_member_species_record{ring});
                 species_counts{1, coord}(2,indeces) = {p.seed_concentration(ring)};
             end
@@ -145,7 +140,8 @@ function [I] = init_world(p, I)
     I.coordinate_list = coordinate_list;
     I.prob_cloud = prob_cloud;
     I.prop_prob_cloud = prop_prob_cloud;
+    I.used_sites = used_sites;
+    I.second_used_sites = second_used_sites;
     I.catalyzed_sites_mask = catalyzed_sites_mask;
-    I.origin = origin;
     
 end
