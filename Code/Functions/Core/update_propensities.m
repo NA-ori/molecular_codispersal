@@ -16,7 +16,8 @@ function [updated_propensities] = update_propensities(reactions_to_update, coord
         reaction = reactions_to_update(i);
         h_i = 1;    % The propensity
         for reactant = 1:length(reactions{reaction}{2})
-            index = strcmp(current_chemical_counts{absolute_coord}(1,:), reactions{reaction}{2}{reactant});
+            % index = strcmp(current_chemical_counts{absolute_coord}(1,:), reactions{reaction}{2}{reactant});
+            index = I.species_index_map{reaction}{reactant};
             reactant_count = current_chemical_counts{absolute_coord}{2,index};
             reactant_stoichiometry = reactions{reaction}{3}{reactant};
 

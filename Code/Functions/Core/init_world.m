@@ -139,6 +139,18 @@ function [I] = init_world(p, I)
 
     end
 
+    % Map species indeces to reactions for faster propensity updating
+    species_index_map = {};
+
+   for i = 1:length(reactions)
+        reaction = i;
+        species_index_map{1,end+1} = {};
+        for reactant = 1:length(reactions{reaction}{2})
+            index = strcmp(species_counts{1}(1,:), reactions{reaction}{2}{reactant});
+            species_index_map{end}{end+1} = index;
+        end
+   end
+
     % Stick outputs into I
 
     I.species_counts = species_counts;
@@ -146,6 +158,7 @@ function [I] = init_world(p, I)
     I.prob_cloud = prob_cloud;
     I.prop_prob_cloud = prop_prob_cloud;
     I.catalyzed_sites_mask = catalyzed_sites_mask;
+    I.species_index_map = species_index_map;
     I.origin = origin;
     
 end
