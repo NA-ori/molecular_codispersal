@@ -157,6 +157,7 @@ function [O, I] = simulate(p, I, O)
         end
         
         t = t + p.disperse_frequency;
+        fprintf(t + "/" + p.t_max + "\n");
         time = [time; t];
 
 
@@ -203,7 +204,7 @@ function [O, I] = simulate(p, I, O)
 
         % ~~~~~~~~~~~~~~~ Time to stop? ~~~~~~~~~~~~~~~
 
-        if t > p.t_max
+        if t >= p.t_max
             break
         end
 
