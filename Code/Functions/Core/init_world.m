@@ -72,38 +72,26 @@ function [I] = init_world(p, I)
        
     end
 
-    % Calculate probability distribution around each point
-    prob_cloud = cell(1,size(I.all_coordinates,2));
-    prop_prob_cloud = cell(1,size(I.all_coordinates,2));
-    for nZero = 1:size(I.all_coordinates,2)
-        missing_prob = 1;
-        prop_missing_prob = 1;
-        for nOne = 1:size(I.all_coordinates,2)
+    I.R = R;
+    I.map_name = "probmap_R" + num2str(R) + ".mat";
+    I.prop_map_name = "probmap_R" + num2str(R) + "_" + num2str(max(p.subcycles_per_ring) + ".mat");
 
-            t = R;  % Revise t to reflect diffusion rates (or make 2 versions of prob_cloud)
-            propt = floor(R/sqrt(max(p.subcycles_per_ring)));   % THIS IS CHEATING, CORRECT THIS
-            n01 = I.all_coordinates{nZero}{1}; n02 = I.all_coordinates{nZero}{2};
-            n1 = I.all_coordinates{nOne}{1}; n2 = I.all_coordinates{nOne}{2};
+    if isfile(I.map_name)
+        fprintf("Loading precalculated prboability map... >w<\n");
+        load(I.map_name, "prob_cloud");
+    else
+        fprintf("Couldn't find precalculated probability map, making one from scratch >w<\n");
+        precalculate_occupation_p(p,I);
+        load(I.map_name, "prob_cloud");
+    end
 
-            P = occupation_p(p.shape, R, 1, t, n01, n02, n1, n2);
-            % ~~~ The following is a temporary approximation ~~~
-            % ~~~ Figure out why probs are going negative ~~~~~~
-            if P < 0, P = 0; end
-
-            missing_prob = missing_prob - P;
-            prob_cloud{nZero}{1,end+1} = P;
-
-            propP = occupation_p(p.shape, R, 1, propt, n01, n02, n1, n2);
-            % ~~~ The following is a temporary approximation ~~~
-            % ~~~ Figure out why probs are going negative ~~~~~~
-            if propP < 0, propP = 0; end
-
-            prop_missing_prob = prop_missing_prob - propP;
-            prop_prob_cloud{nZero}{1,end+1} = propP;
-            
-        end
-        prob_cloud{nZero}{nZero} = prob_cloud{nZero}{nZero} + missing_prob; % Make total probs = 1. Higher probability of a particle staying in original site.
-        prop_prob_cloud{nZero}{nZero} = prop_prob_cloud{nZero}{nZero} + prop_missing_prob;
+    if isfile(I.prop_map_name)
+        fprintf("Loading precalculated prop prboability map... >w<\n");
+        load(I.prop_map_name, "prop_prob_cloud");
+    else
+        fprintf("Couldn't find precalculated prop probability map, making one from scratch >w<\n");
+        precalculate_occupation_p(p,I,prop=true);
+        load(I.prop_map_name, "prop_prob_cloud");
     end
 
 
