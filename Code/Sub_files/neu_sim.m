@@ -11,7 +11,7 @@ function [p, I, O] = neu_sim(options)
     arguments (Input)
 
         options.shape = "hex";
-        options.separation_distance = 5;
+        options.separation_distance = 7;
         options.sites = 2;
 
         % Network parameters
@@ -27,7 +27,7 @@ function [p, I, O] = neu_sim(options)
         options.in_rate = 10;   % THIS SEEMS GOOD, KEEP IT FOR NOW!
         options.out_rate = 1;
         options.fierce_reaction_rate = 0.01;
-        options.prop_formation_rate = 0.01/50;   % MESS WITH THIS!
+        options.prop_formation_rate = 0.0005;   % SEEMS GOOD?
         options.prop_funnel_rate = 150;
         options.adsorb_rate = 0.01;
         options.independence_disadvantage = [Inf];
@@ -43,7 +43,7 @@ function [p, I, O] = neu_sim(options)
         % Simulation parameters
         options.t_max = 1000;
         options.disturb_freq = 0;
-        options.sample_number = 1000;
+        options.sample_number = 10;     % Try messing with this next!!!
 
         % Debug
         options.introspection = true;
@@ -65,7 +65,8 @@ function [p, I, O] = neu_sim(options)
 
 
     % Do the simulation
-    p.disperse_frequency = p.t_max / (p.sample_number/10);
+    %p.disperse_frequency = p.t_max / (p.sample_number/10);
+    p.disperse_frequency = p.sample_number;
     I = struct;
     O = struct;
     tic;

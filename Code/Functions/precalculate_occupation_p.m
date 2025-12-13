@@ -12,7 +12,7 @@ end
     R = I.R;
     prob_cloud = cell(1,size(I.all_coordinates,2));
 
-    for nZero = 1:size(I.all_coordinates,2)
+    parfor nZero = 1:size(I.all_coordinates,2)
         missing_prob = 1;
         for nOne = 1:size(I.all_coordinates,2)
 
