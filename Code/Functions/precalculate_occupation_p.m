@@ -33,10 +33,10 @@ end
     end
     
     if options.prop == false
-        save(I.map_name, "prob_cloud");
+        save(I.map_name, "prob_cloud", "-v7.3");
     else
         prop_prob_cloud = prob_cloud;
-        save(I.prop_map_name, "prop_prob_cloud");
+        save(I.prop_map_name, "prop_prob_cloud", "-v7.3");
     end
 
 end
