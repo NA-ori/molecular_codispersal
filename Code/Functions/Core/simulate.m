@@ -157,7 +157,7 @@ function [O, I] = simulate(p, I, O)
         end
         
         t = t + p.disperse_frequency;
-        fprintf(t + "/" + p.t_max + "\n");
+        if p.introspection == true, fprintf(t + "/" + p.t_max + "\n"); end
         time = [time; t];
 
 

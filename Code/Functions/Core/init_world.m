@@ -73,23 +73,27 @@ function [I] = init_world(p, I)
     end
 
     I.R = R;
-    I.map_name = "probmap_R" + num2str(R) + ".mat";
-    I.prop_map_name = "probmap_R" + num2str(R) + "_" + num2str(max(p.subcycles_per_ring) + ".mat");
+    I.map_name = p.map_prefix + "probmap_R" + num2str(R) + ".mat";
+    I.prop_map_name = p.map_prefix + "probmap_R" + num2str(R) + "_" + num2str(max(p.subcycles_per_ring) + ".mat");
 
     if isfile(I.map_name)
-        fprintf("Loading precalculated prboability map... >w<\n");
+        fprintf("Found " + I.map_name + "!\n");
+        fprintf("Loading precalculated probability map... >w<\n");
         load(I.map_name, "prob_cloud");
     else
         fprintf("Couldn't find precalculated probability map, making one from scratch >w<\n");
+        fprintf("Making " + I.map_name + "...\n")
         precalculate_occupation_p(p,I);
         load(I.map_name, "prob_cloud");
     end
 
     if isfile(I.prop_map_name)
+        fprintf("Found " + I.prop_map_name + "!\n");
         fprintf("Loading precalculated prop prboability map... >w<\n");
         load(I.prop_map_name, "prop_prob_cloud");
     else
         fprintf("Couldn't find precalculated prop probability map, making one from scratch >w<\n");
+        fprintf("Making " + I.prop_map_name + "...\n")
         precalculate_occupation_p(p,I,prop=true);
         load(I.prop_map_name, "prop_prob_cloud");
     end

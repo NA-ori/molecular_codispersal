@@ -21,12 +21,12 @@ function [current_chemical_counts] = outflow(p, diff_mask, current_chemical_coun
                 if contains(current_chemical_counts{1,coord}{1,species}, "prop")
                     leave_prob = (p.out_rate / (p.flow_rate*6))/sqrt(max(p.subcycles_per_ring));
                     stay_prob = 1 - leave_prob;       % THIS IS CHEATING, CORRECT THIS             
-                    sample_array = randsample([0,-1], current_chemical_counts{1,coord}{2,species}, true, [stay_prob, leave_prob]);                    
+                    sample_array = randsample([0,-1], ceil((current_chemical_counts{1,coord}{2,species})*p.diffusion_divisor), true, [stay_prob, leave_prob]);                    
                     
                 else
                     leave_prob = p.out_rate / (p.flow_rate*6);
                     stay_prob = 1 - leave_prob;
-                    sample_array = randsample([0,-1], current_chemical_counts{1,coord}{2,species}, true, [stay_prob, leave_prob]);
+                    sample_array = randsample([0,-1], ceil((current_chemical_counts{1,coord}{2,species})*p.diffusion_divisor), true, [stay_prob, leave_prob]);
                 end
 
                 [counts, ordering] = groupcounts(sample_array');
