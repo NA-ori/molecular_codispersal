@@ -43,6 +43,7 @@ function [I] = init_world(p, I)
         omega = 3*R*(R+1) + 1;  I.omega = omega;
 
         I.all_coordinates = cell(1,omega);
+        I.empty_coord_mask = [];
         coordinate_list = {};
         catalyzed_sites_mask = [];
         origin = 0;
@@ -57,6 +58,8 @@ function [I] = init_world(p, I)
                         if mod(abs(x),D) == 0 && mod(abs(y),D) == 0 && mod(abs(z),D) == 0
                             coordinate_list{1,end+1}{1} = x; coordinate_list{1,end}{2} = y; coordinate_list{1,end}{3} = z;
                             catalyzed_sites_mask = [catalyzed_sites_mask, loops];
+                        else
+                            I.empty_coord_mask = [I.empty_coord_mask, loops];
                         end
                         if x == 0 && y == 0 && z == 0
                             origin = loops;
@@ -89,7 +92,7 @@ function [I] = init_world(p, I)
 
     if isfile(I.prop_map_name)
         fprintf("Found " + I.prop_map_name + "!\n");
-        fprintf("Loading precalculated prop prboability map... >w<\n");
+        fprintf("Loading precalculated prop probability map... >w<\n");
         load(I.prop_map_name, "prop_prob_cloud");
     else
         fprintf("Couldn't find precalculated prop probability map, making one from scratch >w<\n");

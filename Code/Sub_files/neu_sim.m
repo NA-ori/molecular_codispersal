@@ -27,8 +27,9 @@ function [p, I, O] = neu_sim(options)
         options.in_rate = 10;   % THIS SEEMS GOOD, KEEP IT FOR NOW!
         options.out_rate = 1;
         options.fierce_reaction_rate = 0.01;
-        options.prop_formation_rate = 0.0005;   % SEEMS GOOD?
-        options.prop_funnel_rate = 150;
+        options.prop_formation_rate = 0.01 / 20;
+        options.prop_funnel_rate = 1500;
+        options.prop_break_rate = 0.0005;
         options.adsorb_rate = 0.01;
         options.independence_disadvantage = [Inf];
 
@@ -43,10 +44,12 @@ function [p, I, O] = neu_sim(options)
         % Simulation parameters
         options.t_max = 1000;
         options.disturb_freq = 0;
-        options.sample_number = 10;     % Try messing with this next!!!
+        options.sample_number = 20;
+        options.diffusion_divisor = 0.1;
 
-        % Debug
+        % Config
         options.introspection = true;
+        options.map_prefix = "";
 
     end
     
@@ -56,16 +59,7 @@ function [p, I, O] = neu_sim(options)
 
     p = options;
 
-    % Initialize the output file
-
-    %matrixname = "results_" + chtc_batch + "_" + run + "_" + separration + "_" + cycles + "_" + flipseeds + "_" + independence_disadvantage + "_" + disturb_freq + ".txt";
-    %writematrix(["Relative_concentration", "lrc_variance_prop", "lrc_variance_noprop", "P_extinct", "NP_extinct", "P_tot_extinct", "NP_tot_extinct", "separration", "cycles", "independence_disadvantage", "disturb_freq", "flipseeds"], matrixname);
-    matrixname = "results_" + p.prop_formation_rate + "_" + p.separation_distance + "_" + p.sites + "_" + randi([1,9999999]) + ".txt";
-    writematrix(["Relative_concentration", "separration", "sites", "prop_formation_rate"], matrixname);
-
-
     % Do the simulation
-    %p.disperse_frequency = p.t_max / (p.sample_number/10);
     p.disperse_frequency = p.sample_number;
     I = struct;
     O = struct;
@@ -84,8 +78,10 @@ function [p, I, O] = neu_sim(options)
     [O] = summarize(p, I, O);
 
     % Write data to output file
-    %writematrix(["Relative_concentration", "separration", "sites", "prop_formation_rate"]);
-    current_data = [O.relative_concentration, p.separation_distance, p.sites, p.prop_formation_rate];
+    matrixname = "results_" + p.separation_distance + "_" + p.prop_break_rate + "_" + randi([1,9999999]) + ".txt";
+    writematrix(["Relative_concentration", "Approx_unoccupied_pixels", "Prop_break_rate", "separation_distance"], matrixname);
+
+    current_data = [O.relative_concentration, O.approx_unoccupied_pixels, p.prop_break_rate, p.separation_distance];
     fid = fopen(matrixname, 'a+'); 
     fprintf(fid, "%d,%d,%d,%d\n", current_data);
     fclose(fid); 

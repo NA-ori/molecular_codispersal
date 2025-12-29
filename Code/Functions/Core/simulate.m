@@ -36,15 +36,17 @@ function [O, I] = simulate(p, I, O)
     % Initialize propensity tracker (and initial reaction propensities)
     current_chemical_counts = species_counts;
     current_reaction_propensities = cell(1, length(coordinate_list));
+    
     for coord = 1:size(coordinate_list, 2)
+
         % Set up data structure
         current_reaction_propensities{1,coord} = cell(1,size(reactions,1));
         current_reaction_propensities{1,coord}(1,:) = {0};
+
         % Set the starting reaction propensities
         all_reactions = 1:size(current_reaction_propensities{1,coord},2);
         current_reaction_propensities = update_propensities(all_reactions, coord, reactions, current_chemical_counts, current_reaction_propensities,I);
-        % Set fixed propensities of inflow reactions?
-        % But maybe see what happens if I don't first?
+
     end
 
     concentration_tracker = current_chemical_counts;
@@ -59,6 +61,13 @@ function [O, I] = simulate(p, I, O)
     diff_mask(find(contains(base_species, "prop_"),1)) = 1;
     I.diff_mask = diff_mask;
     I.out_mask = diff_mask; I.out_mask(find(contains(base_species, "F"),1)) = 1;
+
+    for reaction = 1:size(I.reactions,1)
+        if I.reactions{reaction}{6} == "prop_break"
+            I.prop_break_reaction = reaction;
+            break
+        end
+    end
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -160,6 +169,9 @@ function [O, I] = simulate(p, I, O)
         if p.introspection == true, fprintf(t + "/" + p.t_max + "\n"); end
         time = [time; t];
 
+        % ~~~~~~~~~~~~~ Break Propagules! ~~~~~~~~~~~~~
+
+        current_chemical_counts = break_props(p, I, current_chemical_counts);
 
         % ~~~~~~~~~~~~~~~~~ Outflow! ~~~~~~~~~~~~~~~~~~
 
