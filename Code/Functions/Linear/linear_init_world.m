@@ -1,0 +1,160 @@
+function [I] = linear_init_world(p, I)
+
+    % For linear sims with no parallelization
+    % Initialize the dimensions of the world and all the data structures
+    % that will hold concentration information
+
+    % Also generate the probability distribution for the given coords
+
+    arguments (Input)
+        p;
+        I;
+    end
+
+    % Initialize coordinate system
+    I.coordinate_list = {};
+    I.all_coordinates = {};
+
+    if p.shape == "parallelogram"
+
+        D = p.separation_distance;
+        s = p.sites;
+        R = s*D;
+    
+        for x = 0:D:(D*(s-1))
+            for y = 0:D:(D*(s-1))
+                I.coordinate_list{1,end+1} = {};
+                I.coordinate_list{1,end}{1,1} = x;
+                I.coordinate_list{1,end}{1,2} = y;
+                I.coordinate_list{1,end}{1,3} = (0-x-y);
+            end
+        end
+
+    elseif p.shape == "hex"
+
+        D = p.separation_distance;
+        s = p.sites;
+        R = s*D + floor(D/2);   I.R = R;
+        omega = 3*R*(R+1) + 1;  I.omega = omega;
+
+        I.all_coordinates = cell(1,omega);
+        I.empty_coord_mask = [];
+        I.coordinate_list = {};
+        I.catalyzed_sites_mask = [];
+        I.origin = 0;
+
+        % Set up pixels
+        loops = 1;
+        for x = -R:R
+            for y = -R:R
+                for z = -R:R
+                    if (x+y+z) == 0
+                        I.all_coordinates{1,loops}{1} = x; I.all_coordinates{1,loops}{2} = y; I.all_coordinates{1,loops}{3} = z;
+                        if mod(abs(x),D) == 0 && mod(abs(y),D) == 0 && mod(abs(z),D) == 0
+                            I.coordinate_list{1,end+1}{1} = x; I.coordinate_list{1,end}{2} = y; I.coordinate_list{1,end}{3} = z;
+                            I.catalyzed_sites_mask = [I.catalyzed_sites_mask, loops];
+                        else
+                            I.empty_coord_mask = [I.empty_coord_mask, loops];
+                        end
+                        if x == 0 && y == 0 && z == 0
+                            I.origin = loops;
+                        end
+                        loops = loops + 1;
+                    end
+                end
+            end
+        end
+        if length(I.catalyzed_sites_mask) ~= length(I.coordinate_list)
+            fprintf("PROBLEM!!!! >:3")
+        end
+       
+    end
+
+    I.R = R;
+
+    % Add the missing dispersal reactions
+    for s = 1:length(I.base_species)
+        spec = I.base_species(s);
+            % If a diffuse reaction is selected, the sim will handle where
+            % the particle is sent separately
+        if contains(spec, "_diff")
+            I.reactions{end+1} = {p.flow_rate, {spec}, {1}, {spec}, {0}, "diffuse"};
+        elseif contains(spec, "prop_")
+            % Apply the right diffusion rate
+            splitprop = split(spec,"_"); cycle_num = str2double(splitprop(2));
+            I.reactions{end+1} = {p.flow_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "diffuse"};
+        end
+    end
+
+    % Make separate data structures to keep track of species in every
+    % coordinate
+    I.species_counts = cell(1, size(I.all_coordinates,2));
+    for coord = 1:size(I.all_coordinates,2)
+        I.species_counts{1, coord} = cellstr(I.base_species);
+        I.species_counts{1, coord}(2,:) = {0};
+    end
+
+
+    for c = 1:length(I.catalyzed_sites_mask)
+        % Set starting concentrations of sites and food
+        coord = I.catalyzed_sites_mask(c);
+        indeces = strcmp(I.base_species, 'F');
+        I.species_counts{1, coord}(2,indeces) = {p.food_concentration};
+        indeces = strcmp(I.base_species, 'site');
+        I.species_counts{1, coord}(2,indeces) = {p.site_concentration};
+
+        % Prepare seeds
+        for ring = 1:length(I.ring_list)
+            temp_member_species_record = I.member_species_record;
+            for seed = 1:size(I.member_species_record{1,ring},2)
+                temp_member_species_record{1,ring}{seed} = convertStringsToChars(temp_member_species_record{1,ring}{seed} + p.seed_state(ring));
+            end
+            if coord == p.seed_locations(ring)
+            %if coord == I.origin
+                indeces = matches(I.base_species, temp_member_species_record{ring});
+                I.species_counts{1, coord}(2,indeces) = {p.seed_concentration(ring)};
+                if p.seed_state(ring) == "_ad"
+                    site_index = matches(I.base_species, "site");
+                    I.species_counts{1, coord}(2, site_index) = {p.site_concentration - p.seed_concentration(ring)*p.subcycles_per_ring(ring)};
+                end
+            end
+        end
+
+    end
+
+    % Map species indeces to reactions for faster propensity updating
+    I.species_index_map = {};
+
+   for i = 1:length(I.reactions)
+        reaction = i;
+        I.species_index_map{1,end+1} = {};
+        for reactant = 1:length(I.reactions{reaction}{2})
+            index = strcmp(I.species_counts{1}(1,:), I.reactions{reaction}{2}{reactant});
+            I.species_index_map{end}{end+1} = index;
+        end
+   end
+
+   % Precalculate reaction map for faster simulating
+   % Set up the update key
+    I.reaction_update_key = cell(1,size(I.reactions,1));
+    reaction_updates_calculated = zeros(1, size(I.reactions,1));
+
+    for mu = 1:size(I.reactions, 1)
+        affected_species = [];
+        affected_reaction_indices = [];
+        for reactant = 1:length(I.reactions{mu}{2})
+            affected_species = [affected_species, I.reactions{mu}{2}{reactant}];
+        end
+        for product = 1:length(I.reactions{mu}{4})
+            affected_species = [affected_species, I.reactions{mu}{4}{product}];
+        end
+        for affected_reaction = 1:size(I.reactions, 1)
+            if any(ismember(string(I.reactions{affected_reaction}{2}), affected_species))
+                affected_reaction_indices = [affected_reaction_indices, affected_reaction];
+            end
+        end
+        I.reaction_update_key{mu} = affected_reaction_indices;
+        reaction_updates_calculated(mu) = 1;
+    end
+    
+end
