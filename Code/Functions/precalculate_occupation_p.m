@@ -20,7 +20,7 @@ end
             n01 = I.all_coordinates{nZero}{1}; n02 = I.all_coordinates{nZero}{2};
             n1 = I.all_coordinates{nOne}{1}; n2 = I.all_coordinates{nOne}{2};
 
-            P = occupation_p(p.shape, R, 1, t, n01, n02, n1, n2);
+            P = single(round(occupation_p(p.shape, R, 1, t, n01, n02, n1, n2), 4));
             % ~~~ The following is a temporary approximation ~~~
             % ~~~ Figure out why probs are going negative ~~~~~~
             if P < 0, P = 0; end
@@ -29,7 +29,7 @@ end
             prob_cloud{nZero}{1,end+1} = P;
             
         end
-        prob_cloud{nZero}{nZero} = prob_cloud{nZero}{nZero} + missing_prob; % Make total probs = 1. Higher probability of a particle staying in original site.
+        %prob_cloud{nZero}{nZero} = prob_cloud{nZero}{nZero} + missing_prob; % Make total probs = 1. Higher probability of a particle staying in original site.
     end
     
     if options.prop == false

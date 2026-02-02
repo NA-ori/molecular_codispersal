@@ -19,12 +19,17 @@ function [current_chemical_counts] = disperse(p, update_mask, diff_mask, current
             if (diff_mask(species) == 1) && (current_chemical_counts{1,coord}{2,species} > 0)
                 % Must update prop_prob_cloud so it accounts for potential
                 % multiple rings with different numbers of subcycles
+
+                particle_number = sum(randsample(0:1, current_chemical_counts{1,coord}{2,species}, true, [1-p.diffusion_divisor,p.diffusion_divisor]));
+
                 if contains(current_chemical_counts{1,coord}{1,species}, "prop")
-                    sample_array = randsample(1:size(current_chemical_counts,2), ceil((current_chemical_counts{1,coord}{2,species})*p.diffusion_divisor), true, cell2mat(prop_prob_cloud{coord}));
+                     sample_array = randsample(1:size(current_chemical_counts,2), particle_number, true, cell2mat(prop_prob_cloud{coord}));
                 else
-                    sample_array = randsample(1:size(current_chemical_counts,2), ceil((current_chemical_counts{1,coord}{2,species})*p.diffusion_divisor), true, cell2mat(prob_cloud{coord}));
+                    sample_array = randsample(1:size(current_chemical_counts,2), particle_number, true, cell2mat(prob_cloud{coord}));
                 end
+
                 [counts, ordering] = groupcounts(sample_array');
+
                 for d = 1:length(ordering)
                     update_mask{ordering(d)}{2,species} = update_mask{ordering(d)}{2,species} + counts(d);
                     update_mask{coord}{2,species} = update_mask{coord}{2,species} - counts(d);

@@ -16,7 +16,7 @@ function [O] = summarize(p, I, O)
     for row = 2:size(global_species_counts,1)
         row_sum = cell2mat(global_species_counts(row,:));
         for coord = 1:size(O.concentration_tracker,2)
-            row_sum = row_sum + cell2mat(O.concentration_tracker{coord}(row,:));
+            row_sum = row_sum + cell2mat(O.concentration_tracker{1,coord}(row,:));
         end
         global_species_counts(row,:) = num2cell(row_sum);
     end
@@ -31,7 +31,8 @@ function [O] = summarize(p, I, O)
     member_species = I.member_species_record;
     for cycle = 1:size(I.member_species_record,2)
         for spec = 1:size(I.member_species_record{cycle},2)
-            member_species{cycle}(spec) = convertStringsToChars(member_species{cycle}(spec) + p.seed_state(cycle));
+            %member_species{cycle}(spec) = convertStringsToChars(member_species{cycle}(spec) + p.seed_state(cycle));
+            member_species{cycle}(spec) = convertStringsToChars(member_species{cycle}(spec) + "_ad");
         end
     end
 

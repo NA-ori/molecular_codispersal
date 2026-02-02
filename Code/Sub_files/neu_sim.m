@@ -42,10 +42,11 @@ function [p, I, O] = neu_sim(options)
         options.seed_state = ["_diff", "_diff"];
 
         % Simulation parameters
-        options.t_max = 1000;
+        options.t_max = 400;
         options.disturb_freq = 0;
         options.sample_number = 20;
-        options.diffusion_divisor = 0.1;
+        options.recording_freq = 20;
+        options.diffusion_divisor = 0.2;
 
         % Config
         options.introspection = true;
