@@ -49,9 +49,11 @@ function [I] = linear_init_world(p, I)
             for y = -R:R
                 for z = -R:R
                     if (x+y+z) == 0
-                        I.all_coordinates{1,loops}{1} = x; I.all_coordinates{1,loops}{2} = y; I.all_coordinates{1,loops}{3} = z;
+                        % I.all_coordinates{1,loops}{1} = x; I.all_coordinates{1,loops}{2} = y; I.all_coordinates{1,loops}{3} = z;
+                        I.all_coordinates{1,loops} = [x,y,z];
                         if mod(abs(x),D) == 0 && mod(abs(y),D) == 0 && mod(abs(z),D) == 0
-                            I.coordinate_list{1,end+1}{1} = x; I.coordinate_list{1,end}{2} = y; I.coordinate_list{1,end}{3} = z;
+                            % I.coordinate_list{1,end+1}{1} = x; I.coordinate_list{1,end}{2} = y; I.coordinate_list{1,end}{3} = z;
+                            I.coordinate_list{1,end+1} = [x,y,z];
                             I.catalyzed_sites_mask = [I.catalyzed_sites_mask, loops];
                         else
                             I.empty_coord_mask = [I.empty_coord_mask, loops];
@@ -67,10 +69,22 @@ function [I] = linear_init_world(p, I)
         if length(I.catalyzed_sites_mask) ~= length(I.coordinate_list)
             fprintf("PROBLEM!!!! >:3")
         end
+        clear x; clear y; clear z; clear loops;
        
     end
 
+    % Calculate mirrored centers for propagation across periodic boundaries
+    I.centres = cell(1,6);
+    q = (2*R)+1; r = -R; s = -R-1;
+    I.centres{1} = [q,r,s];
+    I.centres{2} = [-r,-s,-q];
+    I.centres{3} = [s,q,r];
+    I.centres{4} = [-s,-q,-r];
+    I.centres{5} = [r,s,q];
+    I.centres{6} = [-q,-r,-s];
+
     I.R = R;
+    clear R;
 
     % Add the missing dispersal reactions
     for s = 1:length(I.base_species)
@@ -85,6 +99,7 @@ function [I] = linear_init_world(p, I)
             I.reactions{end+1} = {p.flow_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "diffuse"};
         end
     end
+    clear splitprop; clear s; clear spec; clear cycle_num;
 
     % Make separate data structures to keep track of species in every
     % coordinate
@@ -93,6 +108,7 @@ function [I] = linear_init_world(p, I)
         I.species_counts{1, coord} = cellstr(I.base_species);
         I.species_counts{1, coord}(2,:) = {0};
     end
+    clear coord;
 
 
     for c = 1:length(I.catalyzed_sites_mask)
@@ -119,6 +135,7 @@ function [I] = linear_init_world(p, I)
                 end
             end
         end
+        clear temp_member_species_record; clear c; clear ring; clear coord; clear indeces; clear site_index;
 
     end
 
@@ -133,6 +150,7 @@ function [I] = linear_init_world(p, I)
             I.species_index_map{end}{end+1} = index;
         end
    end
+   clear index; clear i; clear reactant;
 
    % Precalculate reaction map for faster simulating
    % Set up the update key

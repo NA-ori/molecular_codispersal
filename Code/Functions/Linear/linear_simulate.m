@@ -102,21 +102,28 @@ function [O, I] = linear_simulate(p, I, O)
             current_reaction_propensities = linear_update_propensities(absolute_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,propensity_indices,I);
 
             % Randomly determine which neighboring pixel it will be sent to
-            % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            
+            friends = neighbors(I.all_coordinates{absolute_coord}(1), I.all_coordinates{absolute_coord}(2), I.all_coordinates{absolute_coord}(3), 1, I);
+            sampled_coord = randsample(friends,1); sampled_coord = sampled_coord{1};
+            compfunction = @(x) isequal(x, sampled_coord); index = cellfun(compfunction, I.all_coordinates); clear sampled_coord;
+            new_coord = find(index);
 
-            % new_coord = 1;
-            % 
-            % 
-            % % Add the particle to the new pixel
-            % 
-            % for product = 1:size(I.reactions{reac}{4}, 2)
-            %     % Add number of products formed to current counts
-            %     index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{reac}{4}{product});
-            %     current_chemical_counts{new_coord}{2,index} = current_chemical_counts{new_coord}{2,index} + 1;
-            % end
+            % Add the particle to the new pixel
 
-            % Update propensities in the new pixel ~~~~~~~~~~~~~~~~~~~~
+            for product = 1:size(I.reactions{reac}{4}, 2)
+                % Add number of products formed to current counts
+                index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{reac}{4}{product});
+                current_chemical_counts{new_coord}{2,index} = current_chemical_counts{new_coord}{2,index} + 1;
+            end
 
+            % Update propensities in the new pixel
+
+            reactions_to_update = I.reaction_update_key{reac};
+            propensity_indices = reactions_to_update;
+            for index = 1:length(propensity_indices)
+                propensity_indices(index) = (new_coord-1)*size(I.reactions,1) + propensity_indices(index);
+            end
+            current_reaction_propensities = linear_update_propensities(new_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,propensity_indices,I);
 
 
         else
@@ -182,7 +189,10 @@ function [O, I] = linear_simulate(p, I, O)
 
     end
 
-    O.time = time;
-    O.concentration_tracker = concentration_tracker;
+    O.time = time; clear time;
+    O.concentration_tracker = concentration_tracker; clear concentration_tracker;
+
+    clear current_reaction_propensities;
+    clear current_chemical_counts;
 
 end
