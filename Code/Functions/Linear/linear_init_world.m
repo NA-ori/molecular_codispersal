@@ -86,17 +86,19 @@ function [I] = linear_init_world(p, I)
     I.R = R;
     clear R;
 
-    % Add the missing dispersal reactions
+    % Add the missing dispersal reactions (and outflow)
     for s = 1:length(I.base_species)
         spec = I.base_species(s);
             % If a diffuse reaction is selected, the sim will handle where
             % the particle is sent separately
         if contains(spec, "_diff")
             I.reactions{end+1} = {p.flow_rate, {spec}, {1}, {spec}, {0}, "diffuse"};
+            I.reactions{end+1} = {p.out_rate, {spec}, {1}, {spec}, {0}, "outflow"};
         elseif contains(spec, "prop_")
             % Apply the right diffusion rate
             splitprop = split(spec,"_"); cycle_num = str2double(splitprop(2));
             I.reactions{end+1} = {p.flow_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "diffuse"};
+            I.reactions{end+1} = {p.out_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "outflow"};
         end
     end
     clear splitprop; clear s; clear spec; clear cycle_num;
