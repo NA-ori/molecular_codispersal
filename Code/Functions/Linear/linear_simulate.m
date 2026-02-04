@@ -148,6 +148,11 @@ function [O, I] = linear_simulate(p, I, O)
                 index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{reac}{4}{product});
                 current_chemical_counts{absolute_coord}{2,index} = current_chemical_counts{absolute_coord}{2,index} + I.reactions{reac}{5}{product};
             end
+            % Reset food concentration if chemostatted
+            if p.chemostat == true
+                index = strcmp(I.base_species(1,:), "F");
+                current_chemical_counts{absolute_coord}{2,index} = p.food_concentration;
+            end
             if error == true
                 break
             end

@@ -101,6 +101,9 @@ function [I] = linear_init_world(p, I)
             I.reactions{end+1} = {p.out_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "outflow"};
         end
     end
+    if p.chemostat == false
+        I.reactions{end+1} = {p.in_rate, {"F"}, {1}, {"F"}, {0}, "outflow"};
+    end
     clear splitprop; clear s; clear spec; clear cycle_num;
 
     % Make separate data structures to keep track of species in every

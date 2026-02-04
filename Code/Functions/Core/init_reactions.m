@@ -151,7 +151,9 @@ function [I] = init_reactions(p, I)
     end
 
     % Add inflow reaction
-    reactions{end + 1,1} = {p.in_rate, {"F"}, {0}, {"F"}, {1}, "inflow"};
+    if p.chemostat == false
+        reactions{end + 1,1} = {p.in_rate, {"F"}, {0}, {"F"}, {1}, "inflow"};
+    end
 
     % Retrieve a list of all species in the network
     for x = 1:size(reactions, 1)  % get a list of all the species from the basic reactions

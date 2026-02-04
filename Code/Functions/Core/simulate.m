@@ -55,7 +55,10 @@ function [O, I] = simulate(p, I, O, prob_cloud, prop_prob_cloud)
     diff_mask = contains(I.base_species, "_diff");
     diff_mask(find(contains(I.base_species, "prop_"),1)) = 1;
     I.diff_mask = diff_mask;
-    I.out_mask = diff_mask; I.out_mask(find(contains(I.base_species, "F"),1)) = 1;
+    I.out_mask = diff_mask;
+    if p.chemostat == false
+        I.out_mask(find(contains(I.base_species, "F"),1)) = 1;
+    end
 
     for reaction = 1:size(I.reactions,1)
         if I.reactions{reaction}{6} == "prop_break"
@@ -96,6 +99,11 @@ function [O, I] = simulate(p, I, O, prob_cloud, prop_prob_cloud)
                     end
                 end
 
+                % Skip coord if mu = 0
+                if mu == 0
+                    break
+                end
+
                 % Change concentrations and update propensities
                 for reactant = 1:size(I.reactions{mu}{2}, 2)
                     % subtract the number of particles that react from the current counts
@@ -112,6 +120,11 @@ function [O, I] = simulate(p, I, O, prob_cloud, prop_prob_cloud)
                     % Add number of products formed to current counts
                     index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{mu}{4}{product});
                     current_chemical_counts{absolute_coord}{2,index} = current_chemical_counts{absolute_coord}{2,index} + I.reactions{mu}{5}{product};
+                end
+                % Reset food if chemostatted
+                if p.chemostat == true
+                    index = strcmp(I.base_species(1,:), "F");
+                    current_chemical_counts{absolute_coord}{2,index} = p.food_concentration;
                 end
                 if error == true
                     break
