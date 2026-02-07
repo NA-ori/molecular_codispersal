@@ -178,6 +178,8 @@ function [I] = linear_init_world(p, I)
         end
         I.reaction_update_key{mu} = affected_reaction_indices;
         reaction_updates_calculated(mu) = 1;
+        clear affected_reaction_indices; clear affected_species;
+        clear reactant; clear product; clear affected_reaction;
     end
     
 end

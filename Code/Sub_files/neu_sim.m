@@ -12,7 +12,7 @@ function [p, I, O] = neu_sim(options)
 
         options.shape = "hex";
         options.separation_distance = 7;
-        options.sites = 2;
+        options.sites = 1;
 
         % Network parameters
         options.rings = 2;
@@ -23,13 +23,13 @@ function [p, I, O] = neu_sim(options)
         options.must_adsorb = [1,1];
         options.fac_rings = [0,0];
 
-        options.flow_rate = 1;
-        options.in_rate = 10;   % THIS SEEMS GOOD, KEEP IT FOR NOW!
-        options.out_rate = 1;
+        options.flow_rate = 0.6;
+        options.in_rate = 50;
+        options.out_rate = 0.1;
         options.fierce_reaction_rate = 0.01;
-        options.prop_formation_rate = 0.01 / 20;
+        options.prop_formation_rate = 0.01 / 5;
         options.prop_funnel_rate = 1500;
-        options.prop_break_rate = 0.0005;
+        options.prop_break_rate = 0.01 / 5;
         options.adsorb_rate = 0.01;
         options.independence_disadvantage = [Inf];
 
@@ -38,18 +38,19 @@ function [p, I, O] = neu_sim(options)
         options.food_concentration = 1000;
         options.seed_concentration = [25,25];
         options.site_concentration = 500;
-        options.seed_locations = [1,1];
-        options.seed_state = ["_diff", "_diff"];
+        options.seed_locations = [159,173];
+        options.seed_state = ["_ad", "_ad"];
 
         % Simulation parameters
-        options.t_max = 400;
+        options.t_max = 5000;
         options.disturb_freq = 0;
-        options.sample_number = 20;
-        options.recording_freq = 20;
-        options.diffusion_divisor = 0.2;
+        options.sample_number = 50;
+        options.recording_freq = 50;
+        options.diffusion_divisor = 0.5;
+        options.chemostat = true;
 
         % Config
-        options.introspection = true;
+        options.introspection = false;
         options.map_prefix = "";
 
     end
@@ -69,23 +70,24 @@ function [p, I, O] = neu_sim(options)
     fprintf("Initializing reactions >w<\n");
     [I] = init_reactions(p, I);
     fprintf("Initializing world >w<\n");
-    [I] = init_world(p, I);
+    [I] = linear_init_world(p, I);
     O.build_time = toc;
 
     tic;
-    [O, I] = simulate(p, I, O);
+    [O, I] = linear_simulate(p, I, O);
     O.run_time = toc;
 
     [O] = summarize(p, I, O);
+    [O] = approx_unoccupied_pix(p, I, O);
 
     % Write data to output file
     matrixname = "results_" + p.separation_distance + "_" + p.prop_break_rate + "_" + randi([1,9999999]) + ".txt";
-    writematrix(["Relative_concentration", "Approx_unoccupied_pixels", "Prop_break_rate", "separation_distance"], matrixname);
+    writematrix(["Relative_concentration", "Approx_unoccupied_pixels", "separation_distance"], matrixname);
 
-    current_data = [O.relative_concentration, O.approx_unoccupied_pixels, p.prop_break_rate, p.separation_distance];
+    current_data = [O.relative_concentration, O.approx_unoccupied_pixels, p.separation_distance];
     fid = fopen(matrixname, 'a+'); 
-    fprintf(fid, "%d,%d,%d,%d\n", current_data);
+    fprintf(fid, "%d,%d,%d\n", current_data);
     fclose(fid); 
-    fprintf("Data saved. Happy days! >w<\n")
+    fprintf("Data saved. Happy days! >w<\n");
 
 end

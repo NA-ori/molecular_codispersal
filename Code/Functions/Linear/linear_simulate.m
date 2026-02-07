@@ -12,9 +12,6 @@ function [O, I] = linear_simulate(p, I, O)
     %~~~~~ Moving on to the Simulation ~~~~~%
 
     % Initial variables
-    sample_interval = p.t_max / p.sample_number-1;
-    next_sample_time = sample_interval;
-
     if p.disturb_freq ~= 0
         next_disturbance = exprnd(p.disturb_freq);
     else
@@ -49,26 +46,11 @@ function [O, I] = linear_simulate(p, I, O)
     %%%%%%%%%%%%%%%%%%%%%%%%%
 
     while t <= p.t_max
-        r_1 = rand();
-        r_2 = rand();
 
-        a_0 = sum(current_reaction_propensities);
-        tau = (1/a_0) * log(1/r_1);
+        tau = (1/(sum(current_reaction_propensities))) * log(1/rand());
 
         % Try an alternative method of choosing a reaction
-        % mu = randsample(1:length(current_reaction_propensities), 1, true, current_reaction_propensities);
-
-        % now determine which reaction will occur
-        mu = 0;
-        summ = 0;
-        target = r_2*a_0;   % target is some random percentage of the total propensities a_0
-        for reaction = 1:length(current_reaction_propensities)
-            summ = summ + current_reaction_propensities(reaction);
-            if summ > target
-                mu = reaction;  % the reaction that happens to pass the target value first will occur.
-                break
-            end
-        end
+        mu = randsample(1:length(current_reaction_propensities), 1, true, current_reaction_propensities);
 
         % Now figure out which coord things are happening in to update the
         % appropriate values in the concentration tracker
@@ -86,27 +68,34 @@ function [O, I] = linear_simulate(p, I, O)
                 index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{reac}{2}{reactant});
                 current_chemical_counts{absolute_coord}{2,index} = current_chemical_counts{absolute_coord}{2,index} - 1;
                 if current_chemical_counts{absolute_coord}{2,index} < 0
-                    fprintf("Negative concentration detected >:3\n");
+                    fprintf("Negative concentration detected! >___<\n");
                     fprintf("Offending reaction: " + num2str(reac) + "\n");
                     O.current_reaction_propensities = current_reaction_propensities;
                     O.current_chemical_counts = current_chemical_counts;
                     error = true;
                 end
             end
+            clear reactant; clear index;
 
             reactions_to_update = I.reaction_update_key{reac};
             propensity_indices = reactions_to_update;
             for index = 1:length(propensity_indices)
                 propensity_indices(index) = (absolute_coord-1)*size(I.reactions,1) + propensity_indices(index);
             end
+            clear index;
             current_reaction_propensities = linear_update_propensities(absolute_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,propensity_indices,I);
 
             % Randomly determine which neighboring pixel it will be sent to
             
             friends = neighbors(I.all_coordinates{absolute_coord}(1), I.all_coordinates{absolute_coord}(2), I.all_coordinates{absolute_coord}(3), 1, I);
             sampled_coord = randsample(friends,1); sampled_coord = sampled_coord{1};
-            compfunction = @(x) isequal(x, sampled_coord); index = cellfun(compfunction, I.all_coordinates); clear sampled_coord;
-            new_coord = find(index);
+            % compfunction = @(x) isequal(x, sampled_coord); index = cellfun(compfunction, I.all_coordinates); clear sampled_coord;
+            for coord = 1:num_coords
+                if isequal(I.all_coordinates{coord}, sampled_coord)
+                    index = coord;
+                end
+            end
+            new_coord = index; clear index; clear sampled_coord; clear friends;
 
             % Add the particle to the new pixel
 
@@ -115,6 +104,7 @@ function [O, I] = linear_simulate(p, I, O)
                 index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{reac}{4}{product});
                 current_chemical_counts{new_coord}{2,index} = current_chemical_counts{new_coord}{2,index} + 1;
             end
+            clear product; clear index;
 
             % Update propensities in the new pixel
 
@@ -125,13 +115,14 @@ function [O, I] = linear_simulate(p, I, O)
             end
             current_reaction_propensities = linear_update_propensities(new_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,propensity_indices,I);
 
+            clear reactions_to_update; clear propensity_indices; clear index;
 
         else
 
             % Change concentrations and update propensities
             for reactant = 1:size(I.reactions{reac}{2}, 2)
                 % subtract the number of particles that react from the current counts
-                index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{reac}{2}{reactant});
+                index = strcmp(I.base_species(1,:), I.reactions{reac}{2}{reactant});
                 current_chemical_counts{absolute_coord}{2,index} = current_chemical_counts{absolute_coord}{2,index} - I.reactions{reac}{3}{reactant};
                 if current_chemical_counts{absolute_coord}{2,index} < 0
                     fprintf("Negative concentration detected in coord " + num2str(absolute_coord) + " >:3\n");
@@ -143,16 +134,19 @@ function [O, I] = linear_simulate(p, I, O)
                     error = true;
                 end
             end
+            clear reactant; clear index;
             for product = 1:size(I.reactions{reac}{4}, 2)
                 % Add number of products formed to current counts
                 index = strcmp(current_chemical_counts{absolute_coord}(1,:), I.reactions{reac}{4}{product});
                 current_chemical_counts{absolute_coord}{2,index} = current_chemical_counts{absolute_coord}{2,index} + I.reactions{reac}{5}{product};
             end
+            clear product; clear index;
             % Reset food concentration if chemostatted
             if p.chemostat == true
                 index = strcmp(I.base_species(1,:), "F");
                 current_chemical_counts{absolute_coord}{2,index} = p.food_concentration;
             end
+            clear index;
             if error == true
                 break
             end
@@ -163,6 +157,7 @@ function [O, I] = linear_simulate(p, I, O)
                 propensity_indices(index) = (absolute_coord-1)*size(I.reactions,1) + propensity_indices(index);
             end
             current_reaction_propensities = linear_update_propensities(absolute_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,propensity_indices,I);
+            clear propensity_indices; clear reactions_to_update; clear index;
 
         end
 
@@ -183,10 +178,13 @@ function [O, I] = linear_simulate(p, I, O)
             for c = 1:size(I.all_coordinates,2)
                 concentration_tracker{c}(end+1,:) = current_chemical_counts{c}(2,:);
             end
+            clear c;
             next_recording = next_recording + p.recording_freq;
             time = [time; t];
             if p.introspection == true, fprintf(t + "/" + p.t_max + "\n"); end
         end
+
+        clear mu; clear tau;
 
         if t > p.t_max
             break

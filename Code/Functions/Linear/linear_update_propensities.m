@@ -30,5 +30,6 @@ function [updated_propensities] = linear_update_propensities(absolute_coord,reac
         propensity_index = propensity_indices(i);
         current_reaction_propensities(propensity_index) = h_i * rate_constant;  % the propensity of a particular reaction
     end
+    clear rate_constant; clear propensity_index; clear h_i; clear index; clear reactant_count; clear reactant_stoichiometry; clear reaction;
     updated_propensities = current_reaction_propensities;
 end
