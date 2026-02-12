@@ -50,7 +50,7 @@ function [p, I, O] = neu_sim(options)
         options.chemostat = true;
 
         % Config
-        options.introspection = false;
+        options.introspection = true;
         options.map_prefix = "";
 
     end
@@ -70,7 +70,7 @@ function [p, I, O] = neu_sim(options)
     fprintf("Initializing reactions >w<\n");
     [I] = init_reactions(p, I);
     fprintf("Initializing world >w<\n");
-    [I] = linear_init_world(p, I);
+    [p, I] = linear_init_world(p, I);
     O.build_time = toc;
 
     tic;
@@ -80,14 +80,16 @@ function [p, I, O] = neu_sim(options)
     [O] = summarize(p, I, O);
     [O] = approx_unoccupied_pix(p, I, O);
 
-    % Write data to output file
-    matrixname = "results_" + p.separation_distance + "_" + p.prop_break_rate + "_" + randi([1,9999999]) + ".txt";
-    writematrix(["Relative_concentration", "Approx_unoccupied_pixels", "separation_distance"], matrixname);
+    print_output(p,O);
 
-    current_data = [O.relative_concentration, O.approx_unoccupied_pixels, p.separation_distance];
-    fid = fopen(matrixname, 'a+'); 
-    fprintf(fid, "%d,%d,%d\n", current_data);
-    fclose(fid); 
-    fprintf("Data saved. Happy days! >w<\n");
+    % Write data to output file
+    % matrixname = "results_" + p.separation_distance + "_" + p.prop_break_rate + "_" + randi([1,9999999]) + ".txt";
+    % writematrix(["Relative_concentration", "Approx_unoccupied_pixels", "separation_distance"], matrixname);
+    % 
+    % current_data = [O.relative_concentration, O.approx_unoccupied_pixels, p.separation_distance];
+    % fid = fopen(matrixname, 'a+'); 
+    % fprintf(fid, "%d,%d,%d\n", current_data);
+    % fclose(fid); 
+    % fprintf("Data saved. Happy days! >w<\n");
 
 end

@@ -1,4 +1,4 @@
-function [I] = linear_init_world(p, I)
+function [p, I] = linear_init_world(p, I)
 
     % For linear sims with no parallelization
     % Initialize the dimensions of the world and all the data structures
@@ -85,6 +85,10 @@ function [I] = linear_init_world(p, I)
 
     I.R = R;
     clear R;
+
+    % set up seed locations
+    % Fix this so it is alterable in params later
+    p.seed_locations = [I.origin-p.separation_distance, I.origin+p.separation_distance];
 
     % Add the missing dispersal reactions (and outflow)
     for s = 1:length(I.base_species)
