@@ -27,26 +27,38 @@ function [O] = summarize(p, I, O)
 
     cycle_of_interest = 1;
     total_sum = 0;
+    site_occupation = zeros(1, p.rings);
 
     member_species = I.member_species_record;
+    all_species = I.ring_list;
     for cycle = 1:size(I.member_species_record,2)
         for spec = 1:size(I.member_species_record{cycle},2)
-            %member_species{cycle}(spec) = convertStringsToChars(member_species{cycle}(spec) + p.seed_state(cycle));
             member_species{cycle}(spec) = convertStringsToChars(member_species{cycle}(spec) + "_ad");
+        end
+        for spec = 1:size(I.ring_list{cycle},2)
+            all_species{cycle}(spec) = convertStringsToChars(all_species{cycle}(spec) + "_ad");
         end
     end
 
+
     for cycle = 1:length(I.member_species_record)
+        % Calculate relative concentrations
         indeces = matches(I.base_species, member_species{cycle});
         cycle_sum = sum(cell2mat(global_species_counts(end,indeces)));
         total_sum = total_sum + cycle_sum;
         if cycle == cycle_of_interest
             interest_sum = cycle_sum;
         end
+
+        % Calculate percent site occupation
+        all_indeces = matches(I.base_species, all_species{cycle});
+        all_species_cycle_sum = sum(cell2mat(global_species_counts(end,all_indeces)));
+        site_occupation(cycle) = all_species_cycle_sum / (p.site_concentration*length(I.coordinate_list));
     end
 
     relative_concentration = interest_sum / total_sum;
     
     O.relative_concentration = relative_concentration;
+    O.site_occupation = site_occupation;
 
 end
