@@ -88,7 +88,11 @@ function [p, I] = linear_init_world(p, I)
 
     % set up seed locations
     % Fix this so it is alterable in params later
-    p.seed_locations = [I.origin-p.separation_distance, I.origin+p.separation_distance];
+    if p.seed_start == "origin"
+        p.seed_locations = [I.origin, I.origin];
+    else
+        p.seed_locations = [I.origin-p.separation_distance, I.origin+p.separation_distance];
+    end
 
     % Add the missing dispersal reactions (and outflow)
     for s = 1:length(I.base_species)
@@ -140,7 +144,7 @@ function [p, I] = linear_init_world(p, I)
                 I.species_counts{1, coord}(2,indeces) = {p.seed_concentration(ring)};
                 if p.seed_state(ring) == "_ad"
                     site_index = matches(I.base_species, "site");
-                    I.species_counts{1, coord}(2, site_index) = {p.site_concentration - p.seed_concentration(ring)*p.subcycles_per_ring(ring)};
+                    I.species_counts{1, coord}(2, site_index) = {I.species_counts{1, coord}{2, site_index} - p.seed_concentration(ring)*p.subcycles_per_ring(ring)};
                 end
             end
         end

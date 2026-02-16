@@ -34,6 +34,7 @@ function [p, I, O] = neu_sim(options)
         options.independence_disadvantage = [Inf];
 
         % Starting condition parameters
+        options.seed_start = "origin";
         options.default_concentration = 0;
         options.food_concentration = 1000;
         options.seed_concentration = [25,25];
