@@ -8,8 +8,8 @@ function [] = print_output(p, O, options)
         options.file_prefix = "";
         options.file_suffix = "";
         options.random_id = true;
-        options.output_names = ["Relative_concentration", "Approx_unoccupied_pixels"];
-        options.output_values = [O.relative_concentration, O.approx_unoccupied_pixels];
+        options.output_names = ["Max_cycles", "Facultative_modifier", "Relative_concentration", "Approx_unoccupied_pixels"];
+        options.output_values = [max(p.subcycles_per_ring), max(p.independence_disadvantage), O.relative_concentration, O.approx_unoccupied_pixels];
     end
 
     % Name output file
