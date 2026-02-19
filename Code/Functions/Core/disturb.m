@@ -1,13 +1,15 @@
-function [current_chemical_counts] = disturb(p, current_chemical_counts, disturbed_coord, base_species)
+function [current_chemical_counts] = disturb(p, I, current_chemical_counts, disturbed_coord)
 
     arguments (Input)
         p;
+        I;
         current_chemical_counts;
         disturbed_coord;
-        base_species;
     end
     
-    site_mask = strcmp(base_species, "site");
+    site_mask = strcmp(I.base_species, "site");
+    food_mask = strcmp(I.base_species, "F");
     current_chemical_counts{1,disturbed_coord}(2,:) = {0};
     current_chemical_counts{1,disturbed_coord}{2,site_mask} = p.site_concentration;
+    current_chemical_counts{1,disturbed_coord}{2,food_mask} = p.food_concentration;
 end

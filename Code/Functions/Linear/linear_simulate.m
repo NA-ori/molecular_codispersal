@@ -169,6 +169,26 @@ function [O, I] = linear_simulate(p, I, O)
 
         % ~~~~~~~~~~~~ Disturb ~~~~~~~~~~~~ %
 
+        if t > next_disturbance
+
+            disturbed_coord = randsample(I.catalyzed_sites_mask, 1);
+
+            current_chemical_counts = disturb(p, I, current_chemical_counts, disturbed_coord);
+
+            % Update propensities
+            reactions_to_update = 1:num_reactions;
+            propensity_indices = reactions_to_update;
+            for index = 1:length(propensity_indices)
+                propensity_indices(index) = (disturbed_coord-1)*size(I.reactions,1) + propensity_indices(index);
+            end
+            current_reaction_propensities = linear_update_propensities(disturbed_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,propensity_indices,I);
+            if p.introspection == true, fprintf("Disturbance in " + disturbed_coord + " >w<!\n"); end
+            clear propensity_indices; clear reactions_to_update; clear index; clear disturbed_coord;
+
+            next_disturbance = next_disturbance + exprnd(p.disturb_freq);
+
+        end
+
         
         % ~~~~~~~ End of disturbance ~~~~~~ %
 
