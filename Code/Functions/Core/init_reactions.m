@@ -95,7 +95,7 @@ function [I] = init_reactions(p, I)
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 if p.subcycles_per_ring(current_ring) == 2
                     reactions{end + 1,1} = {p.prop_formation_rate, reactants_list, reac_stoich, {("prop_" + string(current_ring)), "site"}, {1, 2}, "prop_form"};
-                    reactions{end + 1,1} = {p.prop_break_rate, {("prop_" + string(current_ring))}, {1}, {free_reactants_list}, reac_stoich, "prop_break"};
+                    reactions{end + 1,1} = {p.prop_break_rate, {("prop_" + string(current_ring))}, {1}, free_reactants_list, reac_stoich, "prop_break"};
 
                 elseif p.subcycles_per_ring(current_ring) == 3
                     reactions{end + 1,1} = {p.prop_formation_rate, {"sp_r1_1_ad", "sp_r1_2_ad"}, {1,1}, {"sp_r1_1_2_prop"}, {1}, "init_prop"};
