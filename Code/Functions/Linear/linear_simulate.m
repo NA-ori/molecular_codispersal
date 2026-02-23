@@ -22,6 +22,7 @@ function [O, I] = linear_simulate(p, I, O)
     t = 0;
     time = [t];
     next_recording = p.recording_freq;
+    sitedex = strcmp(I.base_species, "site");
 
     num_reactions = size(I.reactions,1);
     num_coords = size(I.all_coordinates,2);
@@ -208,6 +209,28 @@ function [O, I] = linear_simulate(p, I, O)
 
         if t > p.t_max
             break
+        end
+
+        % Stop if everything is done, but only under certain parameters
+        % Sims with no disturbance don't change once everything is filled,
+        % so end them once everything is filled
+
+        if p.disturb_freq == 0
+            sitesum = 0;
+            for coord = 1:size(I.all_coordinates,2)
+                sitesum = sitesum + current_chemical_counts{coord}{2,sitedex};
+            end
+            unoccupied = sitesum / (p.site_concentration*size(I.coordinate_list,2));
+            if unoccupied == 0
+                fprintf("Simulation ended because all sites were filled! >W<\n");
+                for c = 1:size(I.all_coordinates,2)
+                    concentration_tracker{c}(end+1,:) = current_chemical_counts{c}(2,:);
+                end
+                clear c;
+                time = [time; t];
+                break
+            end
+            clear unoccupied; clear sitesum; clear coord;
         end
 
     end
