@@ -8,6 +8,8 @@ function [I] = init_reactions(p, I)
         I;
     end
 
+    % Ring generation method written by A. Khanov
+
     reactions = {};
     ring_list = cell(1,p.rings);
     base_species = [];
