@@ -87,8 +87,8 @@ function [I] = init_reactions(p, I)
 
             if p.formation_type(current_ring) == "cheater"
                 
-                reactions{end + 1,1} = {p.prop_form_rate, reactants_list, reac_stoich, {("prop_" + string(current_ring)), "site"}, {1, length(member_species_list)}, "prop_form"};
-                reactions{end + 1,1} = {p.prop_form_rate, {("prop_" + string(current_ring))}, {1}, free_reactants_list, reac_stoich, "prop_form"};
+                reactions{end + 1,1} = {p.prop_formation_rate, reactants_list, reac_stoich, {("prop_" + string(current_ring)), "site"}, {1, length(member_species_list)}, "prop_form"};
+                reactions{end + 1,1} = {p.prop_formation_rate, {("prop_" + string(current_ring))}, {1}, free_reactants_list, reac_stoich, "prop_form"};
 
             elseif p.formation_type(current_ring) == "split"
 
