@@ -106,7 +106,11 @@ function [p, I] = linear_init_world(p, I)
             % Apply the right diffusion rate
             splitprop = split(spec,"_"); cycle_num = str2double(splitprop(2));
             I.reactions{end+1} = {p.flow_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "diffuse"};
-            I.reactions{end+1} = {p.out_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "outflow"};
+            if p.consistent_out_rate == true
+                I.reactions{end+1} = {p.out_rate/sqrt(p.subcycles_per_ring(cycle_num)), {spec}, {1}, {spec}, {0}, "outflow"};
+            else
+                I.reactions{end+1} = {p.out_rate, {spec}, {1}, {spec}, {0}, "outflow"};
+            end
         end
     end
     if p.chemostat == false

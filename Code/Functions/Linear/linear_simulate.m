@@ -208,6 +208,7 @@ function [O, I] = linear_simulate(p, I, O)
         clear mu; clear tau;
 
         if t > p.t_max
+            O.end_time = t;
             break
         end
 
@@ -228,6 +229,7 @@ function [O, I] = linear_simulate(p, I, O)
                 end
                 clear c;
                 time = [time; t];
+                O.end_time = t;
                 break
             end
             clear unoccupied; clear sitesum; clear coord;
