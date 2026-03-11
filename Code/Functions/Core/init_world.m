@@ -94,6 +94,13 @@ function [I, prob_cloud, prop_prob_cloud] = init_world(p, I)
         load(I.prop_map_name, "prop_prob_cloud");
     end
 
+    % set up seed locations
+    % Fix this so it is alterable in params later
+    if p.seed_start == "origin"
+        p.seed_locations = [I.origin, I.origin];
+    else
+        p.seed_locations = [I.origin-p.separation_distance, I.origin+p.separation_distance];
+    end
 
     % Make separate data structures to keep track of species in every
     % coordinate

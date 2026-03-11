@@ -230,8 +230,29 @@ function [O, I] = simulate(p, I, O, prob_cloud, prop_prob_cloud)
         % ~~~~~~~~~~~~~~~ Time to stop? ~~~~~~~~~~~~~~~
 
         if t >= p.t_max
+            O.end_time = t;
             break
         end
+        % 
+        % % Allow ending early if there are no disturbances
+        % if p.disturb_freq == 0
+        %     sitesum = 0;
+        %     for coord = 1:size(I.all_coordinates,2)
+        %         sitesum = sitesum + current_chemical_counts{coord}{2,sitedex};
+        %     end
+        %     unoccupied = sitesum / (p.site_concentration*size(I.coordinate_list,2));
+        %     if unoccupied == 0
+        %         fprintf("Simulation ended because all sites were filled! >W<\n");
+        %         for c = 1:size(I.all_coordinates,2)
+        %             concentration_tracker{c}(end+1,:) = current_chemical_counts{c}(2,:);
+        %         end
+        %         clear c;
+        %         time = [time; t];
+        %         O.end_time = t;
+        %         break
+        %     end
+        %     clear unoccupied; clear sitesum; clear coord;
+        % end
 
     end
 
