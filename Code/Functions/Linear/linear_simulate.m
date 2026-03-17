@@ -18,6 +18,7 @@ function [O, I] = linear_simulate(p, I, O)
         next_disturbance = Inf;
     end
 
+    O.run_time = 0;
     error = false;
     t = 0;
     time = [t];
@@ -48,6 +49,7 @@ function [O, I] = linear_simulate(p, I, O)
 
     while t <= p.t_max
 
+        tic;
         tau = (1/(sum(current_reaction_propensities))) * log(1/rand());
 
         % Try an alternative method of choosing a reaction
@@ -207,7 +209,13 @@ function [O, I] = linear_simulate(p, I, O)
 
         clear mu; clear tau;
 
+        O.run_time = O.run_time + toc;
+
         if t > p.t_max
+            O.end_time = t;
+            break
+        elseif O.run_time / 60 / 60 >= p.stop_time_hrs
+            fprintf("Ended simulation because it took " + p.stop_time_hrs + " hours! >u<\n");
             O.end_time = t;
             break
         end
