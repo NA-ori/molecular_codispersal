@@ -9,16 +9,21 @@ function [O, I] = linear_simulate(p, I, O)
         O;
     end
 
+
     %~~~~~ Moving on to the Simulation ~~~~~%
 
+    if p.reboot == false
+
     % Initial variables
+    O.sim_id = randi([1,99999999]);
+    save_name = "savefile_" + O.sim_id + ".mat";
+    
     if p.disturb_freq ~= 0
         next_disturbance = exprnd(p.disturb_freq);
     else
         next_disturbance = Inf;
     end
 
-    O.run_time = 0;
     error = false;
     t = 0;
     time = [t];
@@ -42,6 +47,15 @@ function [O, I] = linear_simulate(p, I, O)
     end
     
     concentration_tracker = current_chemical_counts;
+
+    else
+
+        fprintf("Attempting to restart from " + p.reboot_from + "^w^\n");
+        load(p.reboot_from);
+        fprintf("Restart successful! ~W~\n");
+    end
+
+    O.run_time = 0;
 
     %%%%%%%%%%%%%%%%%%%%%%%%%
     % THE ACTUAL SIMULATION %
@@ -213,10 +227,14 @@ function [O, I] = linear_simulate(p, I, O)
 
         if t > p.t_max
             O.end_time = t;
+            O.incomplete_sim = false;
             break
         elseif O.run_time / 60 / 60 >= p.stop_time_hrs
             fprintf("Ended simulation because it took " + p.stop_time_hrs + " hours! >u<\n");
             O.end_time = t;
+            save(save_name, "p", "I", "O", "next_disturbance", "error", "t", "time", "next_recording", ...
+                "sitedex", "num_reactions", "num_coords", "current_reaction_propensities", "current_chemical_counts", "concentration_tracker", "save_name");
+            O.incomplete_sim = true;
             break
         end
 
@@ -238,6 +256,7 @@ function [O, I] = linear_simulate(p, I, O)
                 clear c;
                 time = [time; t];
                 O.end_time = t;
+                O.incomplete_sim = false;
                 break
             end
             clear unoccupied; clear sitesum; clear coord;

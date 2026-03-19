@@ -13,7 +13,7 @@ function [] = print_output(p, O, options)
     end
 
     % Name output file
-    matrixname = options.file_prefix + "results" + options.file_suffix + "_"; if options.random_id == true, matrixname = matrixname + randi([1,99999999]); end
+    matrixname = options.file_prefix + "results" + options.file_suffix + "_" + O.sim_id;
     matrixname = matrixname + ".txt";
 
     % ~~~~~~~~~~~~~~~~~~~~~ Write data ~~~~~~~~~~~~~~~~~~~~~~~~~

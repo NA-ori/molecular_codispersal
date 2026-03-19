@@ -11,6 +11,8 @@ function [p, I] = linear_init_world(p, I)
         I;
     end
 
+    if p.reboot == false
+
     % Initialize coordinate system
     I.coordinate_list = {};
     I.all_coordinates = {};
@@ -192,6 +194,10 @@ function [p, I] = linear_init_world(p, I)
         reaction_updates_calculated(mu) = 1;
         clear affected_reaction_indices; clear affected_species;
         clear reactant; clear product; clear affected_reaction;
+    end
+
+    else
+        fprintf("Rebooting, skipped world generation <w<\n");
     end
     
 end

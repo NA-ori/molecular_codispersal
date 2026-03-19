@@ -10,6 +10,8 @@ function [I] = init_reactions(p, I)
 
     % Ring generation method written by A. Khanov
 
+    if p.reboot == false
+
     reactions = {};
     ring_list = cell(1,p.rings);
     base_species = [];
@@ -174,5 +176,9 @@ function [I] = init_reactions(p, I)
     I.ring_list = ring_list;
     I.member_species_record = member_species_record;
     I.base_species = base_species;
+
+    else
+        fprintf("Rebooting, skipped reaction generation >w>\n");
+    end
 
 end
