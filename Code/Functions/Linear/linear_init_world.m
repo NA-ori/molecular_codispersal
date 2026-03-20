@@ -93,7 +93,7 @@ function [p, I] = linear_init_world(p, I)
     if p.seed_start == "origin"
         p.seed_locations = [I.origin, I.origin];
     else
-        p.seed_locations = [I.origin-p.separation_distance, I.origin+p.separation_distance];
+        p.seed_locations = randsample(I.catalyzed_sites_mask,2,false);
     end
 
     % Add the missing dispersal reactions (and outflow)
