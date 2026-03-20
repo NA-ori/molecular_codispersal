@@ -242,7 +242,7 @@ function [O, I] = linear_simulate(p, I, O)
         % Sims with no disturbance don't change once everything is filled,
         % so end them once everything is filled
 
-        if p.disturb_freq == 0
+        if p.disturb_freq == 0 && p.allow_stopping == true
             sitesum = 0;
             for coord = 1:size(I.all_coordinates,2)
                 sitesum = sitesum + current_chemical_counts{coord}{2,sitedex};
