@@ -67,7 +67,19 @@ function [O, I] = linear_simulate(p, I, O)
         tau = (1/(sum(current_reaction_propensities))) * log(1/rand());
 
         % Try an alternative method of choosing a reaction
-        mu = randsample(1:length(current_reaction_propensities), 1, true, current_reaction_propensities);
+
+        try
+            mu = randsample(1:length(current_reaction_propensities), 1, true, current_reaction_propensities);
+        catch
+            if sum(current_reaction_propensities) == 0
+                fprintf("Ended simulations because everything went extinct >~<\n");
+                O.end_time = t;
+                O.incomplete_sim = false;
+                break
+            else
+                error = true;
+            end
+        end
 
         % Now figure out which coord things are happening in to update the
         % appropriate values in the concentration tracker
