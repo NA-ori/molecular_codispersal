@@ -16,7 +16,7 @@ function [O] = summarize(p, I, O)
     for row = 2:size(global_species_counts,1)
         row_sum = cell2mat(global_species_counts(row,:));
         for coord = 1:size(O.concentration_tracker,2)
-            row_sum = row_sum + cell2mat(O.concentration_tracker{1,coord}(row,:));
+            row_sum = row_sum + O.concentration_tracker{1,coord}(row-1,:);
         end
         global_species_counts(row,:) = num2cell(row_sum);
     end

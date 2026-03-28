@@ -1,5 +1,4 @@
 function [I] = init_reactions(p, I)
-    %rings, subcycles_per_ring, prop_forms, formation_type, reac_rate, must_adsorb, fac_rings)
 
 % Initialize a basic set of reactions.
 
@@ -176,6 +175,7 @@ function [I] = init_reactions(p, I)
     I.ring_list = ring_list;
     I.member_species_record = member_species_record;
     I.base_species = base_species;
+    I.num_reactions = size(reactions,1);
 
     else
         fprintf("Rebooting, skipped reaction generation >w>\n");

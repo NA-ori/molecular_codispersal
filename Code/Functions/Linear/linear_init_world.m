@@ -122,21 +122,24 @@ function [p, I] = linear_init_world(p, I)
 
     % Make separate data structures to keep track of species in every
     % coordinate
-    I.species_counts = cell(1, size(I.all_coordinates,2));
-    for coord = 1:size(I.all_coordinates,2)
-        I.species_counts{1, coord} = cellstr(I.base_species);
-        I.species_counts{1, coord}(2,:) = {0};
-    end
-    clear coord;
+
+    I.species_counts = single(zeros(size(I.all_coordinates,2), length(I.base_species)));
+
+    % I.species_counts = cell(1, size(I.all_coordinates,2));
+    % for coord = 1:size(I.all_coordinates,2)
+    %     I.species_counts{1, coord} = cellstr(I.base_species);
+    %     I.species_counts{1, coord}(2,:) = {0};
+    % end
+    % clear coord;
 
 
     for c = 1:length(I.catalyzed_sites_mask)
         % Set starting concentrations of sites and food
         coord = I.catalyzed_sites_mask(c);
         indeces = strcmp(I.base_species, 'F');
-        I.species_counts{1, coord}(2,indeces) = {p.food_concentration};
+        I.species_counts(coord,indeces) = p.food_concentration;
         indeces = strcmp(I.base_species, 'site');
-        I.species_counts{1, coord}(2,indeces) = {p.site_concentration};
+        I.species_counts(coord, indeces) = p.site_concentration;
 
         % Prepare seeds
         for ring = 1:length(I.ring_list)
@@ -147,10 +150,10 @@ function [p, I] = linear_init_world(p, I)
             if coord == p.seed_locations(ring)
             %if coord == I.origin
                 indeces = matches(I.base_species, temp_member_species_record{ring});
-                I.species_counts{1, coord}(2,indeces) = {p.seed_concentration(ring)};
+                I.species_counts(coord,indeces) = p.seed_concentration(ring);
                 if p.seed_state(ring) == "_ad"
                     site_index = matches(I.base_species, "site");
-                    I.species_counts{1, coord}(2, site_index) = {I.species_counts{1, coord}{2, site_index} - p.seed_concentration(ring)*p.subcycles_per_ring(ring)};
+                    I.species_counts(coord,site_index) = (I.species_counts(coord,site_index) - p.seed_concentration(ring)*p.subcycles_per_ring(ring));
                 end
             end
         end
@@ -165,7 +168,7 @@ function [p, I] = linear_init_world(p, I)
         reaction = i;
         I.species_index_map{1,end+1} = {};
         for reactant = 1:length(I.reactions{reaction}{2})
-            index = strcmp(I.species_counts{1}(1,:), I.reactions{reaction}{2}{reactant});
+            index = strcmp(I.base_species(1,:), I.reactions{reaction}{2}{reactant});
             I.species_index_map{end}{end+1} = index;
         end
    end
@@ -195,6 +198,31 @@ function [p, I] = linear_init_world(p, I)
         clear affected_reaction_indices; clear affected_species;
         clear reactant; clear product; clear affected_reaction;
     end
+
+
+    % Test: put EVERYTHING into arrays and handle reactions with a simple
+    % stoichiometric array. Cells take too long to handle
+
+    I.cell_reactions = I.reactions;
+    
+    I.rate_constants = single(zeros(1, I.num_reactions));
+    I.reactions = single(zeros(I.num_reactions, length(I.base_species)));
+    I.tags = [];
+
+    for i = 1:size(I.cell_reactions,1)
+        I.rate_constants(i) = single(I.cell_reactions{i}{1});
+        I.tags = [I.tags, I.cell_reactions{i}{6}];
+        % Make stoich arrays
+        for reactant = 1:size(I.cell_reactions{i}{2}, 2)
+            index = strcmp(I.base_species(1,:), I.cell_reactions{i}{2}{reactant});
+            I.reactions(i,index) = int8(-I.cell_reactions{i}{3}{reactant});
+        end
+        for product = 1:size(I.cell_reactions{i}{4}, 2)
+            index = strcmp(I.base_species(1,:), I.cell_reactions{i}{4}{product});
+            I.reactions(i,index) = int8(I.cell_reactions{i}{5}{product});
+        end
+    end
+
 
     else
         fprintf("Rebooting, skipped world generation <w<\n");
