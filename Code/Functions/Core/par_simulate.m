@@ -1,154 +1,234 @@
-function [O, I] = par_simulate(p, I, O, prob_cloud, prop_prob_cloud)
+function [O, I] = par_simulate(p, I, c, O)
+
+    % Simulation with parallelization of reactions
+    % Autocatalytic reactions can run simultaneously; then sim will enter a
+    % dispersal/propagule breaking phase
 
     arguments (Input)
         p;
         I;
+        c;
         O;
-        prob_cloud;
-        prop_prob_cloud;
     end
 
-    % Extract variables from I
-    base_species = I.base_species;
-    species_counts = I.species_counts;
-    reactions = I.reactions;
-    coordinate_list = I.coordinate_list;
 
+    %~~~~~ Moving on to the Simulation ~~~~~%
 
-    % Initial variables
-    sample_interval = p.t_max / p.sample_number-1;
-    next_sample_time = sample_interval;
+    if p.reboot == false
 
-    if p.disturb_freq ~= 0
-        next_disturbance = exprnd(p.disturb_freq);
-    else
-        next_disturbance = Inf;
-    end
-
-    error = false;
-    t = 0;
-    time = [t];
-    next_recording = p.recording_freq;
-
-    % % Set up the update key
-    % reaction_update_key = cell(1,size(reactions,1));
-    % reaction_updates_calculated = zeros(1, size(reactions,1));
-    reaction_update_key = I.reaction_update_key;
-
-    % Initialize propensity tracker (and initial reaction propensities)
-    current_chemical_counts = species_counts;
-    current_reaction_propensities = cell(1, length(coordinate_list));
-    
-    for coord = 1:size(coordinate_list, 2)
-
-        % Set up data structure
-        current_reaction_propensities{1,coord} = cell(1,size(reactions,1));
-        current_reaction_propensities{1,coord}(1,:) = {0};
-
-        % Set the starting reaction propensities
-        all_reactions = 1:size(current_reaction_propensities{1,coord},2);
-        current_reaction_propensities = update_propensities(all_reactions, coord, reactions, current_chemical_counts, current_reaction_propensities,I);
-
-    end
-
-    concentration_tracker = current_chemical_counts;
-
-    % Some stuff for handling diffusion
-    update_mask = cell(1,length(I.all_coordinates));
-    for coord = 1:size(update_mask,2)
-        update_mask{1, coord} = cellstr(base_species);
-        update_mask{1, coord}(2,:) = {0};
-    end
-    diff_mask = contains(base_species, "_diff");
-    diff_mask(find(contains(base_species, "prop_"),1)) = 1;
-    I.diff_mask = diff_mask;
-    I.out_mask = diff_mask; I.out_mask(find(contains(base_species, "F"),1)) = 1;
-    out_mask = I.out_mask;
-
-    for reaction = 1:size(I.reactions,1)
-        if I.reactions{reaction}{6} == "prop_break"
-            I.prop_break_reaction = reaction;
-            break
+        % Initial variables
+        O.sim_id = randi([1,99999999]);
+        save_name = "savefile_" + O.sim_id + ".mat";
+        
+        if p.disturb_freq ~= 0
+            next_disturbance = exprnd(p.disturb_freq);
+        else
+            next_disturbance = Inf;
         end
+    
+        error = false;
+        t = 0;
+        time = [t];
+        next_recording = p.recording_freq;
+        sitedex = strcmp(I.base_species, "site");
+        foodex = strcmp(I.base_species, "F");
+
+        % Some stuff for diffusion and easier indexing
+        diff_mask = contains(I.base_species, "_diff"); diff_ind = find(diff_mask);
+        prop_mask = contains(I.base_species, "prop_"); prop_ind = find(prop_mask);
+    
+        num_reactions = size(I.reactions,1);
+        num_coords = size(I.all_coordinates,2);
+    
+        % Set up propensity and concentration trackers
+        current_chemical_counts = I.species_counts;
+    
+        % Set up a 2-dimensional reaction propensity array
+    
+        current_reaction_propensities = zeros(num_coords,num_reactions);
+        all_reactions = 1:num_reactions;
+    
+        for coord = 1:num_coords
+            current_reaction_propensities = update_propensities(coord,all_reactions,current_chemical_counts,current_reaction_propensities,I);
+        end
+        
+        concentration_tracker = cell(1,num_coords);
+        for cel = 1:size(concentration_tracker,2)
+            concentration_tracker(1,cel) = {current_chemical_counts(cel,:)};
+        end
+
+    else
+
+        fprintf("Attempting to restart from " + p.reboot_from + "^w^\n");
+        load(p.reboot_from);
+        fprintf("Restart successful! ~W~\n");
     end
 
+    O.run_time = 0;
 
     %%%%%%%%%%%%%%%%%%%%%%%%%
     % THE ACTUAL SIMULATION %
     %%%%%%%%%%%%%%%%%%%%%%%%%
 
+    % propensity_length = 1:length(current_reaction_propensities);
+
     while t <= p.t_max      % Greater loop
 
-        parfor coord = 1:length(coordinate_list)
-            [I, current_reaction_propensities, current_chemical_counts] = par_sim_innards(p, I, current_reaction_propensities, current_chemical_counts, coord)
+        tic;
+        for co = 1:length(I.catalyzed_sites_mask)
+            coord = I.catalyzed_sites_mask(co);
+            local_time = 0;
+
+            while local_time <= p.chunk_time    % Lesser loop
+        
+                tau = (1/(sum(current_reaction_propensities(coord,:)))) * log(1/rand());
+        
+                % Try an alternative method of choosing a reaction
+        
+                try
+                    reac = randsample(num_reactions, 1, true, current_reaction_propensities(coord,:));
+                catch
+                    if sum(current_reaction_propensities) == 0
+                        fprintf("Stopped running chunk because there's nothing in it! >~<\n");
+                        break
+                    else
+                        error = true;
+                    end
+                end
+                
+                % Change concentrations and update propensities
+                current_chemical_counts(coord,:) = current_chemical_counts(coord,:) + I.reactions(reac,:);
+    
+                if any(current_chemical_counts(coord,:)<0)
+                    fprintf("Negative concentration detected in coord " + num2str(absolute_coord) + " >:3\n");
+                    fprintf("Offending reaction: " + num2str(reac) + "\n");
+                    O.current_reaction_propensities = current_reaction_propensities;
+                    O.current_chemical_counts = current_chemical_counts;
+                    O.time = time;
+                    error = true;
+                end
+                    
+                % Reset food if chemostatted
+                if p.chemostat == true
+                    current_chemical_counts(coord,foodex) = p.food_concentration;
+                end
+    
+                if error == true
+                    break
+                end
+    
+                reactions_to_update = I.reaction_update_key{reac};
+                current_reaction_propensities = update_propensities(coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,I);
+                clear reactions_to_update;
+
+                local_time = local_time + tau;
+                if local_time > p.chunk_time
+                    break
+                end
+
+            end
         end
 
-        % if error == true
-        %     fprintf("Simulation ended because an error was encountered! ;__;\n")
-        %     break
-        % end
+        if error == true
+            fprintf("Simulation ended because an error was encountered! ;__;\n")
+            break
+
+        end
+
+        % ~~~~~ Disperse ~~~~~ %
         
-        t = t + p.disperse_frequency;
+        current_chemical_counts = disperse(I, num_coords, diff_ind, current_chemical_counts, c.cloud);   % Regular particles
+        current_chemical_counts = disperse(I, num_coords, prop_ind, current_chemical_counts, c.prop_cloud);   % Propagules
+
+        % Update propensities
+        for coord = 1:num_coords
+            current_reaction_propensities = update_propensities(coord,1:num_reactions,current_chemical_counts,current_reaction_propensities,I);
+        end
+
+        % ~~~~~~~~~~~~ End dispersal  ~~~~~~~~~~~~~ %
+
+        % TO DO: Handle outflow and propagules bursting
+
+
+
+        % ~~~~~~~~~~~~ Disturb ~~~~~~~~~~~~ %
+
+        if t > next_disturbance
+
+            disturbed_coord = randsample(I.catalyzed_sites_mask, 1);
+
+            current_chemical_counts = disturb(p, I, current_chemical_counts, disturbed_coord);
+
+            % Update propensities
+            reactions_to_update = 1:num_reactions;
+            current_reaction_propensities = update_propensities(disturbed_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,I);
+            if p.introspection == true, fprintf("Disturbance in " + disturbed_coord + " >w<!\n"); end
+            clear reactions_to_update; clear disturbed_coord;
+
+            next_disturbance = next_disturbance + exprnd(p.disturb_freq);
+
+        end
+
+        % ~~~~~~~ End of disturbance ~~~~~~ %
+
+
+
+        t = t + p.chunk_time;
+
         if t >= next_recording
-            for c = 1:size(I.all_coordinates,2)
-                concentration_tracker{c}(end+1,:) = current_chemical_counts{c}(2,:);
+            for co = 1:num_coords
+                concentration_tracker{1,co}(end+1,:) = current_chemical_counts(co,:);
             end
+            clear co;
             next_recording = next_recording + p.recording_freq;
             time = [time; t];
             if p.introspection == true, fprintf(t + "/" + p.t_max + "\n"); end
         end
 
-        % ~~~~~~~~~~~~~ Break Propagules! ~~~~~~~~~~~~~
+        clear reac; clear tau;
 
-        current_chemical_counts = break_props(p, I, current_chemical_counts);
-
-        % ~~~~~~~~~~~~~~~~~ Outflow! ~~~~~~~~~~~~~~~~~~
-
-        current_chemical_counts = outflow(p, out_mask, current_chemical_counts, I);
-
-        % Update propensities
-        for coordin = 1:size(coordinate_list, 2)
-            all_reactions = 1:size(current_reaction_propensities{1,coordin},2);
-            current_reaction_propensities = update_propensities(all_reactions, coordin, reactions, current_chemical_counts, current_reaction_propensities,I);
-        end
-
-        % ~~~~~~~~~~~~~~~~~ Disperse! ~~~~~~~~~~~~~~~~~
-
-        current_chemical_counts = disperse(p, update_mask, diff_mask, current_chemical_counts, prob_cloud, prop_prob_cloud);
-
-        % Update propensities
-        for coordin = 1:size(coordinate_list, 2)
-            all_reactions = 1:size(current_reaction_propensities{1,coordin},2);
-            current_reaction_propensities = update_propensities(all_reactions, coordin, reactions, current_chemical_counts, current_reaction_propensities,I);
-        end
-
-        % ~~~~~~~~~~~~~~~~~ Disturb! ~~~~~~~~~~~~~~~~~~
-
-        if t > next_disturbance
-
-            disturbed_coord = randsample(I.catalyzed_sites_mask, 1);
-            current_reaction_propensities = disturb(p, current_chemical_counts, disturbed_coord, base_species);
-
-            % Update propensities
-            all_reactions = 1:size(current_reaction_propensities{1,disturbed_coord},2);
-            current_reaction_propensities = update_propensities(all_reactions, disturbed_coord, reactions, current_chemical_counts, current_reaction_propensities,I);
-
-        end
+        O.run_time = O.run_time + toc;
 
 
-        % ~~~~~~~~~~~~~~~ Time to stop? ~~~~~~~~~~~~~~~
-
-        if t >= p.t_max
+        if t > p.t_max
+            O.end_time = t;
+            O.incomplete_sim = false;
+            break
+        elseif O.run_time / 60 / 60 >= p.stop_time_hrs
+            fprintf("Ended simulation because it took " + p.stop_time_hrs + " hours! >u<\n");
+            O.end_time = t;
+            save(save_name, "p", "I", "O", "next_disturbance", "error", "t", "time", "next_recording", ...
+                "sitedex", "num_reactions", "num_coords", "current_reaction_propensities", "current_chemical_counts", "concentration_tracker", "save_name");
+            O.incomplete_sim = true;
             break
         end
 
+
+        % Stop if everything is done, but only under certain parameters
+        % Sims with no disturbance don't change once everything is filled,
+        % so end them once everything is filled
+        % 
+        % if p.disturb_freq == 0 && p.allow_stopping == true
+        %     sitesum = 0;
+        %     for coord = 1:size(I.all_coordinates,2)
+        %         sitesum = sitesum + current_chemical_counts(coord,sitedex);
+        %     end
+        %     unoccupied = sitesum / (p.site_concentration*size(I.coordinate_list,2));
+        %     if unoccupied == 0
+        %         fprintf("Simulation ended because all sites were filled! >W<\n");
+        %         for c = 1:size(I.all_coordinates,2)
+        %             concentration_tracker{1,c}(end+1,:) = current_chemical_counts(c,:);
+        %         end
+        %         clear c;
+        %         time = [time; t];
+        %         O.end_time = t;
+        %         O.incomplete_sim = false;
+        %         break
+        %     end
+        %     clear unoccupied; clear sitesum; clear coord;
+        % end
+
     end
-
-    % Add variables to output structures
-
-    I.species_counts = species_counts;
-    I.current_reaction_propensities = current_reaction_propensities;
-    I.current_chemical_counts = current_chemical_counts;
 
     O.time = time;
     O.concentration_tracker = concentration_tracker;
