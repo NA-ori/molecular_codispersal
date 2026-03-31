@@ -65,6 +65,8 @@ function [O, I] = linear_simulate(p, I, O)
     % THE ACTUAL SIMULATION %
     %%%%%%%%%%%%%%%%%%%%%%%%%
 
+    propensity_length = 1:length(current_reaction_propensities);
+
     while t <= p.t_max
 
         tic;
@@ -73,7 +75,7 @@ function [O, I] = linear_simulate(p, I, O)
         % Try an alternative method of choosing a reaction
 
         try
-            mu = randsample(1:length(current_reaction_propensities), 1, true, current_reaction_propensities);
+            mu = randsample(propensity_length, 1, true, current_reaction_propensities);
         catch
             if sum(current_reaction_propensities) == 0
                 fprintf("Ended simulations because everything went extinct >~<\n");
