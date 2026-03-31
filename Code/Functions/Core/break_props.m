@@ -43,7 +43,7 @@ function current_chemical_counts = break_props(p, I, current_chemical_counts)
                         current_chemical_counts{absolute_coord}{2,index} = current_chemical_counts{absolute_coord}{2,index} + I.reactions{mu}{5}{product};
                     end
                     if p.introspection == true
-                         fprintf("A propagule burst in " + absolute_coord + " ^w^\n");
+                         %fprintf("A propagule burst in " + absolute_coord + " ^w^\n");
                     end
                 end
 
