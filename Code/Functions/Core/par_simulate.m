@@ -34,11 +34,19 @@ function [O, I] = par_simulate(p, I, c, O)
         foodex = strcmp(I.base_species, "F");
 
         % Some stuff for diffusion and easier indexing
+
         diff_mask = contains(I.base_species, "_diff"); diff_ind = find(diff_mask);
         prop_mask = contains(I.base_species, "prop_"); prop_ind = find(prop_mask);
+        comb_mask = diff_mask+prop_mask; comb_ind = find(comb_mask);
+
+        prop_break_reaction = find(strcmp(I.tags, "prop_break"));
     
         num_reactions = size(I.reactions,1);
         num_coords = size(I.all_coordinates,2);
+
+        % leave_prob = p.out_rate / p.flow_rate + p.out_rate;
+        leave_prob = 0.5;
+        stay_prob = 1 - leave_prob;
     
         % Set up propensity and concentration trackers
         current_chemical_counts = I.species_counts;
@@ -135,21 +143,18 @@ function [O, I] = par_simulate(p, I, c, O)
 
         end
 
-        % ~~~~~ Disperse ~~~~~ %
+        % ~~~~~ Disperse! ~~~~~ %
         
         current_chemical_counts = disperse(I, num_coords, diff_ind, current_chemical_counts, c.cloud);   % Regular particles
         current_chemical_counts = disperse(I, num_coords, prop_ind, current_chemical_counts, c.prop_cloud);   % Propagules
 
-        % Update propensities
-        for coord = 1:num_coords
-            current_reaction_propensities = update_propensities(coord,1:num_reactions,current_chemical_counts,current_reaction_propensities,I);
-        end
+        % ~~~~~~ Outflow! ~~~~~~ %
+        
+        current_chemical_counts = outflow(p, comb_ind, leave_prob, stay_prob, num_coords, current_chemical_counts, I);
 
-        % ~~~~~~~~~~~~ End dispersal  ~~~~~~~~~~~~~ %
+        % ~~~~~~ Break Propagules! ~~~~~~ %
 
-        % TO DO: Handle outflow and propagules bursting
-
-
+        current_chemical_counts = break_props(p, I, prop_ind, prop_break_reaction, current_chemical_counts);
 
         % ~~~~~~~~~~~~ Disturb ~~~~~~~~~~~~ %
 
@@ -159,11 +164,9 @@ function [O, I] = par_simulate(p, I, c, O)
 
             current_chemical_counts = disturb(p, I, current_chemical_counts, disturbed_coord);
 
-            % Update propensities
-            reactions_to_update = 1:num_reactions;
-            current_reaction_propensities = update_propensities(disturbed_coord,reactions_to_update,current_chemical_counts,current_reaction_propensities,I);
             if p.introspection == true, fprintf("Disturbance in " + disturbed_coord + " >w<!\n"); end
-            clear reactions_to_update; clear disturbed_coord;
+
+            clear disturbed_coord;
 
             next_disturbance = next_disturbance + exprnd(p.disturb_freq);
 
@@ -172,6 +175,13 @@ function [O, I] = par_simulate(p, I, c, O)
         % ~~~~~~~ End of disturbance ~~~~~~ %
 
 
+        % Update propensities after all that nonsense
+        for coord = 1:num_coords
+            current_reaction_propensities = update_propensities(coord,1:num_reactions,current_chemical_counts,current_reaction_propensities,I);
+        end
+
+
+        % ~~~~ Handle end-loop stuff ~~~~ %
 
         t = t + p.chunk_time;
 
@@ -208,25 +218,25 @@ function [O, I] = par_simulate(p, I, c, O)
         % Sims with no disturbance don't change once everything is filled,
         % so end them once everything is filled
         % 
-        % if p.disturb_freq == 0 && p.allow_stopping == true
-        %     sitesum = 0;
-        %     for coord = 1:size(I.all_coordinates,2)
-        %         sitesum = sitesum + current_chemical_counts(coord,sitedex);
-        %     end
-        %     unoccupied = sitesum / (p.site_concentration*size(I.coordinate_list,2));
-        %     if unoccupied == 0
-        %         fprintf("Simulation ended because all sites were filled! >W<\n");
-        %         for c = 1:size(I.all_coordinates,2)
-        %             concentration_tracker{1,c}(end+1,:) = current_chemical_counts(c,:);
-        %         end
-        %         clear c;
-        %         time = [time; t];
-        %         O.end_time = t;
-        %         O.incomplete_sim = false;
-        %         break
-        %     end
-        %     clear unoccupied; clear sitesum; clear coord;
-        % end
+        if p.disturb_freq == 0 && p.allow_stopping == true
+            sitesum = 0;
+            for coord = I.catalyzed_sites_mask
+                sitesum = sitesum + current_chemical_counts(coord,sitedex);
+            end
+            unoccupied = sitesum / (p.site_concentration*size(I.coordinate_list,2));
+            if unoccupied == 0
+                fprintf("Simulation ended because all sites were filled! >W<\n");
+                for c = 1:size(I.all_coordinates,2)
+                    concentration_tracker{1,c}(end+1,:) = current_chemical_counts(c,:);
+                end
+                clear c;
+                time = [time; t];
+                O.end_time = t;
+                O.incomplete_sim = false;
+                break
+            end
+            clear unoccupied; clear sitesum; clear coord;
+        end
 
     end
 
