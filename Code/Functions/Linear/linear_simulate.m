@@ -131,7 +131,7 @@ function [O, I] = linear_simulate(p, I, O)
             new_coord = index; clear index; clear sampled_coord; clear friends;
 
             % Add the particle to the new pixel
-            current_chemical_counts(new_coord,:) = current_chemical_counts(new_coord,:) - I.reactions(reac,:);
+            current_chemical_counts(new_coord,:) = current_chemical_counts(new_coord,:) - (I.reactions(reac,:));
 
 
             % Update propensities in the new pixel

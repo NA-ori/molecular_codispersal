@@ -217,9 +217,11 @@ function [p, I] = linear_init_world(p, I)
             index = strcmp(I.base_species(1,:), I.cell_reactions{i}{2}{reactant});
             I.reactions(i,index) = int8(-I.cell_reactions{i}{3}{reactant});
         end
+        if I.tags(i) ~= "diffuse" && I.tags(i) ~= "outflow"
         for product = 1:size(I.cell_reactions{i}{4}, 2)
             index = strcmp(I.base_species(1,:), I.cell_reactions{i}{4}{product});
             I.reactions(i,index) = int8(I.cell_reactions{i}{5}{product});
+        end
         end
     end
 
