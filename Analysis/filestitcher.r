@@ -1,7 +1,7 @@
 ### Stitch output files together into one CSV ###
 
-file_location <- file.path("Data", "raw", "P1_dispersal_kernel", "*.txt")
-filename <- file.path("Data", "P1_disp_kernel.csv")
+file_location <- file.path("untracked", "correct_results", "*.txt")
+filename <- file.path("untracked", "correct_results.csv")
 
 
 # Read raw data files

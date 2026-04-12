@@ -1,8 +1,6 @@
-/testing_ground.mlx
 untracked/
 Data/raw/
-Code/Maps/
-Code/Sub_files/
+Sub_files
 Analysis/filestitcher.r
-Code/fun_upload.sh
+fun_upload.sh
 Data/raw/
