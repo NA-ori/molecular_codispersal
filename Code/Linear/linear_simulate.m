@@ -34,6 +34,14 @@ function [O, I] = linear_simulate(p, I, O)
     num_reactions = size(I.reactions,1);
     num_coords = size(I.all_coordinates,2);
 
+    % Precalculate some stuff for faster propensity updating
+    I.propensity_count_map = cell(1, size(I.reactions,1));
+    I.propensity_stoich_map = cell(1,size(I.reactions,1));
+    for reaction = 1:size(I.reactions,1)
+        I.propensity_count_map{reaction} = I.reactions(reaction,:)<0;
+        I.propensity_stoich_map{reaction} = -(I.reactions(reaction,(I.reactions(reaction,:)<0)));
+    end
+
     % Set up propensity and concentration trackers
     current_chemical_counts = I.species_counts;
 
@@ -75,7 +83,11 @@ function [O, I] = linear_simulate(p, I, O)
         % Try an alternative method of choosing a reaction
 
         try
-            mu = randsample(propensity_length, 1, true, current_reaction_propensities);
+            %mu = randsample(propensity_length, 1, true, current_reaction_propensities);
+
+            % Test alternative to randsample
+            mu = fast_sample(propensity_length, current_reaction_propensities);
+
         catch
             if sum(current_reaction_propensities) == 0
                 fprintf("Ended simulations because everything went extinct >~<\n");

@@ -40,8 +40,11 @@ function [updated_propensities] = linear_update_propensities(absolute_coord,reac
             % reactant_counts = current_chemical_counts(absolute_coord,reactant_stoichiometry<0);
             % reactant_stoichiometry = -reactant_stoichiometry(reactant_stoichiometry<0);
 
-            reactant_counts = current_chemical_counts(absolute_coord,I.reactions(reaction,:)<0);
-            reactant_stoichiometry = -(I.reactions(reaction,(I.reactions(reaction,:)<0)));
+            % reactant_counts = current_chemical_counts(absolute_coord,I.reactions(reaction,:)<0);
+            % reactant_stoichiometry = -(I.reactions(reaction,(I.reactions(reaction,:)<0)));
+
+            reactant_counts = current_chemical_counts(absolute_coord,I.propensity_count_map{reaction});
+            reactant_stoichiometry = I.propensity_stoich_map{reaction};
             
             for reactant = 1:length(reactant_counts)
 
@@ -49,14 +52,18 @@ function [updated_propensities] = linear_update_propensities(absolute_coord,reac
                     h_i = 0;
                     break;
                 else
-                    h_i = h_i * nchoosek(reactant_counts(reactant), reactant_stoichiometry(reactant));    % how many combinations of n items (reactant_stoichiometry) can be taken from a set of size k (reactant_count)
+                    if reactant_stoichiometry(reactant) > 1
+                        h_i = h_i * nchoosek(reactant_counts(reactant), reactant_stoichiometry(reactant));    % how many combinations of n items (reactant_stoichiometry) can be taken from a set of size k (reactant_count)
+                    else
+                        h_i = h_i * reactant_counts(reactant);
+                    end
                 end
             end
             current_reaction_propensities(propensity_indices(i)) = h_i * I.rate_constants(reaction);  % the propensity of a particular reaction
 
         end
     end
-    clear h_i; clear reactant_counts; clear reactant_stoichiometry; clear reaction; clear reactant;
+    clear h_i; clear reactant_counts; clear reactant_stoichiometry;
     updated_propensities = current_reaction_propensities;
 
 end
