@@ -161,7 +161,9 @@ function [O, I] = linear_simulate(p, I, O)
             end
                 
             % Reset food if chemostatted
-            current_chemical_counts(absolute_coord,foodex) = p.food_concentration;
+            if any(ismember(I.catalyzed_sites_mask, absolute_coord))
+                current_chemical_counts(absolute_coord,foodex) = p.food_concentration;
+            end
 
             if error == true
                 break
