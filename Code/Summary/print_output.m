@@ -55,7 +55,7 @@ function [] = print_output(p, I, O, options)
 
     % Also print a csv of the concentration tracker
     csv_name = options.file_prefix + "curve" + options.file_suffix + "_" + O.sim_id + ".csv";
-    writecell(O.global_species_counts, csv_name);
+    writematrix(O.global_species_counts, csv_name);
 
     % Also save all the structs for later use if desired
     info_name = options.file_prefix + "info" + options.file_suffix + "_" + O.sim_id + ".mat";

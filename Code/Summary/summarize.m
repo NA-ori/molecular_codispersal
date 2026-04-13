@@ -21,7 +21,9 @@ function [O] = summarize(p, I, O)
         global_species_counts(row,:) = num2cell(row_sum);
     end
 
-    O.global_species_counts = global_species_counts;
+    time_col = ["t"; double(O.time)];
+    O.global_species_counts = [time_col, global_species_counts];
+
 
     % Return relative occupancy of cycle 1
 
