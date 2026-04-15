@@ -10,6 +10,6 @@ function [O] = approx_unoccupied_pix(p, I, O)
 
     sites_count = O.global_species_counts{end, sites_index};
 
-    O.approx_unoccupied_pixels = sites_count / p.site_concentration;
+    O.approx_unoccupied_pixels = str2double(sites_count) / p.site_concentration;
 
 end
