@@ -63,4 +63,66 @@ function [O] = summarize(p, I, O)
     O.relative_concentration = relative_concentration;
     O.site_occupation = site_occupation;
 
+    O.member_species = member_species;
+    O.all_species = all_species;
+
+    % Calculate extinction
+
+    O.adsorbed_A_extinct = 0;
+    O.adsorbed_NA_extinct = 0;
+    O.total_A_extinct = 0;
+    O.total_NA_extinct = 0;
+
+    O.adsorbed_none_extinct = 0;
+    O.adsorbed_all_extinct = 0;
+    O.total_none_extinct = 0;
+    O.total_all_extinct = 0;
+
+    A_count_ad = 0;
+    NA_count_ad = 0;
+    A_count_all = 0;
+    NA_count_all = 0;
+
+    for i = 1:length(I.base_species)
+        d = i+1;
+
+        if ( (contains(I.base_species(i), "_r1")) && (contains(I.base_species(i), "_ad")) ) || (contains(I.base_species(i), "prop"))
+            A_count_ad = A_count_ad + str2double(O.global_species_counts(end,d));
+            A_count_all = A_count_all + str2double(O.global_species_counts(end,d));
+        end
+        if ( (contains(I.base_species(i), "_r1")) && (contains(I.base_species(i), "_diff")) )
+            A_count_all = A_count_all + str2double(O.global_species_counts(end,d));
+        end        
+
+        if ( (contains(I.base_species(i), "_r2")) && (contains(I.base_species(i), "_ad")) )
+            NA_count_ad = NA_count_ad + str2double(O.global_species_counts(end,d));
+            NA_count_all = NA_count_all + str2double(O.global_species_counts(end,d));
+        end
+        if ( (contains(I.base_species(i), "_r2")) && (contains(I.base_species(i), "_diff")) )
+            NA_count_all = NA_count_all + str2double(O.global_species_counts(end,d));
+        end 
+
+    end
+
+    if A_count_all == 0 && NA_count_all == 0
+        O.total_all_extinct = 1;
+    elseif A_count_all == 0 && NA_count_all > 0
+        O.total_A_extinct = 1;
+    elseif A_count_all > 0 && NA_count_all == 0
+        O.total_NA_extinct = 1;
+    elseif A_count_all > 0 && NA_count_all > 0
+        O.total_none_extinct = 1;
+    end
+
+    if A_count_ad == 0 && NA_count_ad == 0
+        O.adsorbed_all_extinct = 1;
+    elseif A_count_ad == 0 && NA_count_ad > 0
+        O.adsorbed_A_extinct = 1;
+    elseif A_count_ad > 0 && NA_count_ad == 0
+        O.adsorbed_NA_extinct = 1;
+    elseif A_count_ad > 0 && NA_count_ad > 0
+        O.adsorbed_none_extinct = 1;
+    end
+
+
 end

@@ -8,8 +8,8 @@ function [] = print_output(p, I, O, options)
         options.file_prefix = "";
         options.file_suffix = "";
         options.random_id = true;
-        options.output_names = ["Fastest_reac_rate", "End_time", "Runtime", "Max_cycles", "Facultative_modifier", "Relative_concentration", "Approx_unoccupied_pixels", "Sites_occupied", "ID"];
-        options.output_values = [max(p.reac_rate), O.end_time, O.run_time, max(p.subcycles_per_ring), max(p.independence_disadvantage), O.relative_concentration, O.approx_unoccupied_pixels, O.site_occupation(1), O.sim_id];
+        options.output_names = ["Fastest_reac_rate", "End_time", "Runtime", "Max_cycles", "Facultative_modifier", "Relative_concentration", "Approx_unoccupied_pixels", "Sites_occupied", "ID", "ad_A_extinct", "ad_NA_extinct", "ad_none_extinct", "ad_all_extinct", "tot_A_extinct", "tot_NA_extinct", "tot_all_extinct", "tot_none_extinct"];
+        options.output_values = [max(p.reac_rate), O.end_time, O.run_time, max(p.subcycles_per_ring), max(p.independence_disadvantage), O.relative_concentration, O.approx_unoccupied_pixels, O.site_occupation(1), O.sim_id, O.adsorbed_A_extinct, O.adsorbed_NA_extinct, O.adsorbed_none_extinct, O.adsorbed_all_extinct, O.total_A_extinct, O.total_NA_extinct, O.total_all_extinct, O.total_none_extinct];
     end
 
     % Name output file
