@@ -170,7 +170,9 @@ for (row in seq(nrow(ex_data))) {
 
 # total
 
-ggplot(
+colors = c("#D62800", "#FF9B56", "#D462A6", "#A40062")
+
+ex_s1 <- ggplot(
     data = subset(ex_data, sites==1),
     mapping = aes(x = separation_distance, fill = extinction_total)) + 
     geom_bar(position = "fill") +
@@ -178,16 +180,19 @@ ggplot(
     labs(
         x = "D",
         y = "Proportion of Runs",
-        fill = "Result"
+        fill = "Result",
+        #title = "1 Ring"
     ) +
     scale_x_continuous(breaks = c(1, 3, 5, 7, 9)) +
-    scale_fill_manual(values = c("#A40062", "#5BCFFB", "#D462A6", "darkgrey")) +
+    scale_fill_manual(values = colors) +
     theme_bw() +
-    theme(panel.grid.minor = element_blank())
+    theme(panel.grid.minor = element_blank(), 
+        #legend.position="none",
+        )
     ggsave(file.path("Analysis", "Figures", "extinction_pies_s1_total.svg"), width = 8, height = 4)
 
 
-ggplot(
+ex_s2 <- ggplot(
     data = subset(ex_data, sites==2),
     mapping = aes(x = separation_distance, fill = extinction_total)) + 
     geom_bar(position = "fill") +
@@ -195,10 +200,36 @@ ggplot(
     labs(
         x = "D",
         y = "Proportion of Runs",
-        fill = "Result"
+        fill = "Result",
+        #title = "2 Rings"
     ) +
     scale_x_continuous(breaks = c(1, 3, 5, 7, 9)) +
-    scale_fill_manual(values = c("#D62800", "#FF9B56", "#D462A6", "#A40062")) +
+    scale_fill_manual(values = colors) +
     theme_bw() +
-    theme(panel.grid.minor = element_blank())
+    theme(panel.grid.minor = element_blank(),
+    #axis.text.y = element_blank(),
+    #axis.title.y = element_blank()
+    )
     ggsave(file.path("Analysis", "Figures", "extinction_pies_s2_total.svg"), width = 8, height = 4)
+
+
+# Combined total extinction plot
+
+ggplot(
+    data = subset(ex_data),
+    mapping = aes(x = separation_distance, fill = extinction_total)) + 
+    geom_bar(position = "fill") +
+    facet_grid(factor(disturb_freq) ~ sites) +
+    labs(
+        x = "D",
+        y = "Proportion of Runs",
+        fill = "Result",
+        #title = "2 Rings"
+    ) +
+    scale_x_continuous(breaks = c(1, 3, 5, 7, 9)) +
+    scale_fill_manual(values = colors) +
+    theme_bw() +
+    theme(panel.grid.minor = element_blank(),
+    strip.background = element_blank()
+        )
+    ggsave(file.path("Analysis", "Figures", "extinction_pies_total_merged.svg"), width = 8, height = 5)
