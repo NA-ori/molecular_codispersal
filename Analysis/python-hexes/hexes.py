@@ -4,16 +4,18 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import rgb2hex
 import numpy as np
 import pandas as pd
+import math
 
-# Some settings based on the world size
-# This will make sure coordinates are accurate
-# Manually input this before running
 
-separation_distance = 7
-sites = 2
+# Read data
 
-R = separation_distance*sites + (separation_distance // 2) # Calculate world radius
-omega = 3*R*(R+1) + 1
+data = pd.read_csv("Data/raw/2-comp/curves_s2/complete_curve_4829.csv")
+end_rows = data[data['t'] > 3499] # Just in case there's some variation in the exact final time
+
+# Regenerate the coordinates
+
+omega = end_rows.shape[0]-1 # -1 bc coordinate zero is global concentrations
+R = int((1/6) * (math.sqrt((12*omega) - 3) - 3)) # rearranged equation to get the radius
 
 # Same as matlab coord generation
 coord = []
@@ -27,13 +29,6 @@ for x in range(-R, R+1):
 print(R)
 print(omega)
 print(len(coord)) # should be the same as omega
-
-# Read data
-
-data = pd.read_csv("Data/raw/2-comp/curves_s2/complete_curve_4829.csv")
-end_rows = data[data['t'] > 3499] # Just in case there's some variation in the exact final time
-
-# Checks
 if end_rows.shape[0]-1 != len(coord):
     print("Dimensions incorrect for this data file\n")
     print("Omega = "); print(omega)
@@ -41,21 +36,20 @@ if end_rows.shape[0]-1 != len(coord):
 
 
 # Make the color map
-gradient = ["#D62800", "#1AB3FF"]
+gradient = ["#DC3220", "#005AB5"]
 color_map = LinearSegmentedColormap.from_list("custom_gradient", gradient)
 print(rgb2hex(color_map(0.5))) # Check
 
 # Make colors based on relative concentrations
+
+da = "diff"     # diff or ad, whichever you want to graph
+
 colors = []
 for x in range(len(coord)):
     #colors.append(["Gray"])
     current_row = end_rows[end_rows["pixel"] == x+1]
-    # Look at adsorbed
-    current_A = current_row["sp_r1_1_ad"] + current_row["sp_r1_2_ad"] + current_row["sp_r1_3_ad"]
-    current_NA = current_row["sp_r2_1_ad"] + current_row["sp_r2_2_ad"] + current_row["sp_r2_3_ad"]
-    # Look at diffused
-    current_A = current_row["sp_r1_1_diff"] + current_row["sp_r1_2_diff"] + current_row["sp_r1_3_diff"]
-    current_NA = current_row["sp_r2_1_diff"] + current_row["sp_r2_2_diff"] + current_row["sp_r2_3_diff"]
+    current_A = current_row["sp_r1_1_"+da] + current_row["sp_r1_2_"+da] + current_row["sp_r1_3_"+da]
+    current_NA = current_row["sp_r2_1_"+da] + current_row["sp_r2_2_"+da] + current_row["sp_r2_3_"+da]
 
     current_A = current_A.to_numpy()[0]
     current_NA = current_NA.to_numpy()[0]
@@ -63,18 +57,18 @@ for x in range(len(coord)):
     try:
         current_rel_con = (current_A) / (current_A + current_NA)
     except ZeroDivisionError:
-        current_rel_con = 512 # something nonsensical, also a reference :3
-    if current_rel_con != 512:
-        colors.append([rgb2hex(color_map(current_rel_con))])
-    elif current_rel_con == 512:
-        colors.append(["Gray"])
-
+        print(current_rel_con)
+        current_rel_con = 512 # something nonsensical :3
+    if np.isnan(current_rel_con):
+        colors.append(["#BEBEBE"]) # empty space with nothink in it
+    else:
+        colors.append([rgb2hex(color_map(current_rel_con))]) # something from the color map
 
 # Convert coordinates into something plottable
 hcoord = [c[0] for c in coord]
 vcoord = [2. * np.sin(np.radians(60)) * (c[1] - c[2]) /3. for c in coord]
 
-# Produce figure
+# Make figure
 fig, ax = plt.subplots(1)
 ax.set_aspect('equal')
 
@@ -82,10 +76,10 @@ for x, y, c in zip(hcoord, vcoord, colors):
     color = c[0].lower()
     hex = RegularPolygon((x, y), numVertices=6, radius=2. / 3., 
                          orientation=np.radians(30), 
-                         facecolor=color, alpha=0.2, edgecolor='k')
+                         facecolor=color, alpha=1, edgecolor='k')
     ax.add_patch(hex)
 
-# Also add scatter points in hexagon centres
+# Make points so scope shows all the hexagons
 ax.scatter(hcoord, vcoord, c=[c[0].lower() for c in colors], alpha=0)
 
 plt.show()
