@@ -9,8 +9,9 @@ import math
 
 # Read data
 
-data = pd.read_csv("Data/raw/2-comp/curves_s2/complete_curve_4829.csv")
-end_rows = data[data['t'] > 3499] # Just in case there's some variation in the exact final time
+data = pd.read_csv("Data/raw/2-comp/curves_s2/complete_curve_97086759.csv")
+max_t = data["t"].max()
+end_rows = data[data['t'] > max_t-1] # Just in case there's some variation in the exact final time
 
 # Regenerate the coordinates
 
@@ -51,6 +52,7 @@ for x in range(len(coord)):
     current_A = current_row["sp_r1_1_"+da] + current_row["sp_r1_2_"+da] + current_row["sp_r1_3_"+da]
     current_NA = current_row["sp_r2_1_"+da] + current_row["sp_r2_2_"+da] + current_row["sp_r2_3_"+da]
 
+    print(current_A)
     current_A = current_A.to_numpy()[0]
     current_NA = current_NA.to_numpy()[0]
 
