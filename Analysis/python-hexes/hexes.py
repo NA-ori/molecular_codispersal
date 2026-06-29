@@ -43,7 +43,7 @@ print(rgb2hex(color_map(0.5))) # Check
 
 # Make colors based on relative concentrations
 
-da = "diff"     # diff or ad, whichever you want to graph
+da = "ad"     # diff or ad, whichever you want to graph
 
 colors = []
 for x in range(len(coord)):
@@ -52,15 +52,10 @@ for x in range(len(coord)):
     current_A = current_row["sp_r1_1_"+da] + current_row["sp_r1_2_"+da] + current_row["sp_r1_3_"+da]
     current_NA = current_row["sp_r2_1_"+da] + current_row["sp_r2_2_"+da] + current_row["sp_r2_3_"+da]
 
-    print(current_A)
     current_A = current_A.to_numpy()[0]
     current_NA = current_NA.to_numpy()[0]
 
-    try:
-        current_rel_con = (current_A) / (current_A + current_NA)
-    except ZeroDivisionError:
-        print(current_rel_con)
-        current_rel_con = 512 # something nonsensical :3
+    current_rel_con = (current_A) / (current_A + current_NA)
     if np.isnan(current_rel_con):
         colors.append(["#BEBEBE"]) # empty space with nothink in it
     else:
