@@ -35,7 +35,7 @@ function [I] = init_reactions(p, I)
 
             % link subcycles through waste:
             mutualist_waste = "";
-            if current_sub == p.subcycles_per_ring
+            if current_sub == p.subcycles_per_ring(current_ring)
                 mutualist_waste = "sp_r" + string(current_ring) + "_" + string(1) + "_w";
             else
                 mutualist_waste = "sp_r" + string(current_ring) + "_" + string(current_sub + 1) + "_w";
