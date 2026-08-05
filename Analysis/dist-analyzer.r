@@ -58,9 +58,11 @@ ggplot(
     coord_cartesian(xlim = c(1, 9), ylim = c(0, 1)) +
     scale_x_continuous(breaks = c(1, 3, 5, 7, 9)) +
     scale_color_manual(values = c("#A40062", "#5BCFFB", "#D462A6", "#D62800")) +
+    scale_shape_manual(values = c(19, 17, 15, 18)) +
     theme_bw() +
-    theme(legend.position = c(0.9, 0.2), panel.grid.minor = element_blank(),
-    legend.background = element_rect(colour="grey50", linewidth=0.3))
+    theme(legend.position = c(0.93, 0.22), panel.grid.minor = element_blank(),
+    legend.background = element_rect(colour="grey50", linewidth=0.3),
+    strip.background = element_blank())
     ggsave(file.path("Analysis", "Figures", "dist_graph_s2.svg"), width = 6, height = 4)
 
 
@@ -93,7 +95,8 @@ ggplot(
     scale_shape_manual(values = c(19, 17, 15, 18)) +
     theme_bw() +
     theme(legend.position = c(0.93, 0.22), panel.grid.minor = element_blank(),
-    legend.background = element_rect(colour="grey50", linewidth=0.3)) +
+    legend.background = element_rect(colour="grey50", linewidth=0.3),
+    strip.background = element_blank()) +
     facet_wrap(~sites)
     ggsave(file.path("Analysis", "Figures", "dist_graph_merged.svg"), width = 8, height = 4)
 

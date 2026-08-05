@@ -9,9 +9,17 @@ import math
 
 # Read data
 
-data = pd.read_csv("Data/raw/2-comp/curves_s2/complete_curve_97086759.csv")
+data = pd.read_csv("Data/raw/2-comp/curves_s2/complete_curve_99276178.csv")
 max_t = data["t"].max()
+begin_rows = data[data['t'] == 0]
+#mid_rows = data[round(data['t']) == max_t//4]
+mid_rows = data[round(data['t']) == 220]
+
 end_rows = data[data['t'] > max_t-1] # Just in case there's some variation in the exact final time
+
+# Change this for whatever you want to retrieve---->
+end_rows = mid_rows
+
 
 # Regenerate the coordinates
 
@@ -57,7 +65,7 @@ for x in range(len(coord)):
 
     current_rel_con = (current_A) / (current_A + current_NA)
     if np.isnan(current_rel_con):
-        colors.append(["#BEBEBE"]) # empty space with nothink in it
+        colors.append(["#FFFFFF"]) # empty space with nothink in it
     else:
         colors.append([rgb2hex(color_map(current_rel_con))]) # something from the color map
 
@@ -68,6 +76,7 @@ vcoord = [2. * np.sin(np.radians(60)) * (c[1] - c[2]) /3. for c in coord]
 # Make figure
 fig, ax = plt.subplots(1)
 ax.set_aspect('equal')
+ax.set_axis_off()
 
 for x, y, c in zip(hcoord, vcoord, colors):
     color = c[0].lower()
@@ -79,5 +88,5 @@ for x, y, c in zip(hcoord, vcoord, colors):
 # Make points so scope shows all the hexagons
 ax.scatter(hcoord, vcoord, c=[c[0].lower() for c in colors], alpha=0)
 
+plt.savefig("example_mid.svg", format="svg")
 plt.show()
-                   

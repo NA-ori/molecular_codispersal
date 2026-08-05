@@ -4,3 +4,4 @@ Sub_files
 Analysis/filestitcher.r
 fun_upload.sh
 Data/raw/
+Analysis/python-hexes/venv/
