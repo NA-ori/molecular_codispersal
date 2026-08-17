@@ -3,6 +3,7 @@
 library(tidyverse)
 library(patchwork)
 library(plotrix)
+library(svglite)
 
 data <- read.csv(file.path("Data/raw/2-comp/curves_s2/complete_curve_99276178.csv"))
 data <- subset(data, pixel==0)
@@ -20,12 +21,21 @@ ggplot(
     #guides(shape="none") +
     labs(
         x = "Time",
-        y = "Concentration",
+        y = "Count",
         color = "Species", shape = "Species"
     ) +
     coord_cartesian(xlim = c(0, 1000), ylim = c(0, 1000)) +
     scale_x_continuous(breaks = c(0, 250, 500, 750, 1000)) +
-    #scale_color_manual(values = c("#1AB3FF", "#A40062", "#D62800")) +
+    scale_color_manual(values = c("#D62800", "#FF9B56", "#D462A6", "#A40062", "#5BCFFB", "#F5ABB9")) +
     theme_bw() +
     theme(panel.grid.minor = element_blank())
-    #ggsave(file.path("Analysis", "Figures", "largeloops_graph.svg"), width = 6, height = 3)
+    ggsave(file.path("Analysis", "Figures", "exampe_graph.svg"), width = 6, height = 3)
+
+
+# Make color palette for example figure
+cols <- colorRampPalette(c("#DC3220", "#005AB5"))
+colorlist <- cols(100)
+
+svglite("gradient.svg", width=4, height=4)
+plot(rep(1,100),col=(colorlist), pch=15,cex=2)
+dev.off()
