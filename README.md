@@ -1,9 +1,5 @@
 # Molecular Codispersal
 
-Simulations for testing codispersal in reaction-diffusion systems using the Gillespie algorithm and hybrids.
+Simulations for testing codispersal in reaction-diffusion systems using the Gillespie algorithm. Used in https://www.biorxiv.org/content/10.64898/2026.09.08.750225v1.
 
 The tutorials folder contains scripts that demonstrate how to use the functions!
-
-Plans: fix the parallel functions (and actually make them use multithreading) and later port everything to Octave and then Rust. Also speed up everything in every way possible.
-
-Code for running vesicle codispersal will also be merged at some point!
